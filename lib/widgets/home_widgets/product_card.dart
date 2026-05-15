@@ -1,0 +1,236 @@
+// lib/core/widgets/product_card.dart
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:customer_app/core/theem/app_typography.dart';
+import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:flutter/material.dart';
+
+class ProductCard extends StatelessWidget {
+  final Map<String, dynamic> product;
+  final VoidCallback onTap;
+  final VoidCallback onAddToCart;
+
+  const ProductCard({
+    super.key,
+    required this.product,
+    required this.onTap,
+    required this.onAddToCart,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDiscount = product['old_price'] != null;
+    final discountPercent = hasDiscount
+        ? ((product['old_price'] - product['price']) /
+                  product['old_price'] *
+                  100)
+              .round()
+        : 0;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.appSurface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: context.appCardShadow(
+            alpha: 0.14,
+            blur: 30,
+            offset: const Offset(0, 12),
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              // صورة المنتج - تغطي كامل الكارد
+              Positioned.fill(
+                child: CachedNetworkImage(
+                  imageUrl: product['image'],
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: AppColors.primarySoft,
+                    child: const Center(
+                      child: Icon(
+                        Icons.image,
+                        color: AppColors.primary,
+                        size: 40,
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: AppColors.primarySoft,
+                    child: const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        color: AppColors.primary,
+                        size: 40,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // تراكب داكن لتحسين وضوح النص
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.3),
+                        Colors.black.withOpacity(0.7),
+                      ],
+                      stops: const [0.4, 0.7, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+
+              // شارة الخصم
+              if (hasDiscount)
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      '-$discountPercent%',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // أيقونة المفضلة (اختيارية)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: CircleAvatar(
+                  backgroundColor: Colors.white.withOpacity(0.9),
+                  radius: 18,
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.favorite_border,
+                      size: 16,
+                      color: AppColors.error,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ),
+              ),
+
+              // معلومات المنتج في الأسفل
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // اسم المنتج
+                      Text(
+                        product['name'],
+                        style: AppTypography.titleSmall.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+
+                      // الوحدة
+                      Text(
+                        product['unit'] ?? 'قطعة',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // السعر وزر الإضافة
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (hasDiscount)
+                                Text(
+                                  '${product['old_price'].toStringAsFixed(2)} ل.س',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    decoration: TextDecoration.lineThrough,
+                                    color: Colors.white60,
+                                  ),
+                                ),
+                              Text(
+                                '${product['price'].toStringAsFixed(2)} ل.س',
+                                style: AppTypography.titleMedium.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // زر إضافة للسلة
+                          GestureDetector(
+                            onTap: onAddToCart,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.secondary,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.secondary.withOpacity(0.4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.add_shopping_cart,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

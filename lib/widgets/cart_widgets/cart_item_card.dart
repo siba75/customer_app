@@ -1,0 +1,279 @@
+import 'package:customer_app/core/theem/app_typography.dart';
+import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:customer_app/model/cart_item_model.dart';
+import 'package:flutter/material.dart';
+
+class CartItemCard extends StatelessWidget {
+  final CartItem item;
+  final VoidCallback onIncrease;
+  final VoidCallback onDecrease;
+  final VoidCallback onRemove;
+
+  const CartItemCard({
+    super.key,
+    required this.item,
+    required this.onIncrease,
+    required this.onDecrease,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.appSurface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: context.appSoftBorder),
+        boxShadow: context.appCardShadow(
+          alpha: 0.11,
+          blur: 28,
+          offset: const Offset(0, 12),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ProductThumb(item: item),
+          const SizedBox(width: 14),
+          Expanded(child: _ProductInfo(item: item)),
+          const SizedBox(width: 8),
+          _CardActions(
+            item: item,
+            onIncrease: onIncrease,
+            onDecrease: onDecrease,
+            onRemove: onRemove,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductThumb extends StatelessWidget {
+  final CartItem item;
+
+  const _ProductThumb({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 86,
+          height: 96,
+          decoration: BoxDecoration(
+            color: context.appSoftPrimary,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: const Icon(
+            Icons.shopping_bag_outlined,
+            color: AppColors.primary,
+            size: 36,
+          ),
+        ),
+        if (item.hasDiscount)
+          Positioned(
+            top: -7,
+            right: -7,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.secondary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'عرض',
+                style: TextStyle(
+                  color: AppColors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ProductInfo extends StatelessWidget {
+  final CartItem item;
+
+  const _ProductInfo({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          item.name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.titleSmall.copyWith(
+            color: context.appText,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'لكل ${item.unit}',
+          style: AppTypography.bodySmall.copyWith(color: context.appMutedText),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              '${item.price.toStringAsFixed(2)} ل.س',
+              style: AppTypography.titleMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            if (item.hasDiscount)
+              Text(
+                '${item.oldPrice!.toStringAsFixed(2)} ل.س',
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.appMutedText,
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'المجموع: ${item.total.toStringAsFixed(2)} ل.س',
+          style: AppTypography.bodyMedium.copyWith(
+            color: context.appText,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CardActions extends StatelessWidget {
+  final CartItem item;
+  final VoidCallback onIncrease;
+  final VoidCallback onDecrease;
+  final VoidCallback onRemove;
+
+  const _CardActions({
+    required this.item,
+    required this.onIncrease,
+    required this.onDecrease,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _IconCircleButton(
+          icon: Icons.delete_outline,
+          color: AppColors.error,
+          backgroundColor: AppColors.error.withValues(alpha: 0.1),
+          onTap: onRemove,
+        ),
+        const SizedBox(height: 18),
+        _QuantityStepper(
+          quantity: item.quantity,
+          onIncrease: onIncrease,
+          onDecrease: onDecrease,
+        ),
+      ],
+    );
+  }
+}
+
+class _QuantityStepper extends StatelessWidget {
+  final int quantity;
+  final VoidCallback onIncrease;
+  final VoidCallback onDecrease;
+
+  const _QuantityStepper({
+    required this.quantity,
+    required this.onIncrease,
+    required this.onDecrease,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: context.appBackground,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: context.appSoftBorder),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _IconCircleButton(
+            icon: Icons.add,
+            color: AppColors.primary,
+            onTap: onIncrease,
+            size: 30,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Text(
+              '$quantity',
+              style: AppTypography.titleSmall.copyWith(
+                color: context.appText,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          _IconCircleButton(
+            icon: Icons.remove,
+            color: quantity > 1 ? AppColors.primary : AppColors.grey,
+            onTap: onDecrease,
+            size: 30,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconCircleButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  final Color? backgroundColor;
+  final double size;
+
+  const _IconCircleButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    this.backgroundColor,
+    this.size = 36,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(99),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: backgroundColor ?? color.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: size * 0.55),
+      ),
+    );
+  }
+}
