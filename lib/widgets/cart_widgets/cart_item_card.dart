@@ -2,6 +2,7 @@ import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:customer_app/model/cart_item_model.dart';
+import 'package:customer_app/widgets/product/authenticated_product_image.dart';
 import 'package:flutter/material.dart';
 
 class CartItemCard extends StatelessWidget {
@@ -59,6 +60,8 @@ class _ProductThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = item.imageUrl;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -69,10 +72,20 @@ class _ProductThumb extends StatelessWidget {
             color: context.appSoftPrimary,
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(
-            Icons.shopping_bag_outlined,
-            color: AppColors.primary,
-            size: 36,
+          clipBehavior: Clip.antiAlias,
+          child: AuthenticatedProductImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            placeholderBuilder: (_) => const Icon(
+              Icons.shopping_bag_outlined,
+              color: AppColors.primary,
+              size: 36,
+            ),
+            errorBuilder: (_) => const Icon(
+              Icons.image_not_supported_outlined,
+              color: AppColors.primary,
+              size: 34,
+            ),
           ),
         ),
         if (item.hasDiscount)
@@ -186,6 +199,7 @@ class _CardActions extends StatelessWidget {
         const SizedBox(height: 18),
         _QuantityStepper(
           quantity: item.quantity,
+          maxQuantity: item.maxQuantity,
           onIncrease: onIncrease,
           onDecrease: onDecrease,
         ),
@@ -196,11 +210,13 @@ class _CardActions extends StatelessWidget {
 
 class _QuantityStepper extends StatelessWidget {
   final int quantity;
+  final int? maxQuantity;
   final VoidCallback onIncrease;
   final VoidCallback onDecrease;
 
   const _QuantityStepper({
     required this.quantity,
+    required this.maxQuantity,
     required this.onIncrease,
     required this.onDecrease,
   });
@@ -219,8 +235,8 @@ class _QuantityStepper extends StatelessWidget {
         children: [
           _IconCircleButton(
             icon: Icons.add,
-            color: AppColors.primary,
-            onTap: onIncrease,
+            color: _canIncrease ? AppColors.primary : AppColors.grey,
+            onTap: _canIncrease ? onIncrease : null,
             size: 30,
           ),
           Padding(
@@ -236,19 +252,23 @@ class _QuantityStepper extends StatelessWidget {
           _IconCircleButton(
             icon: Icons.remove,
             color: quantity > 1 ? AppColors.primary : AppColors.grey,
-            onTap: onDecrease,
+            onTap: quantity > 1 ? onDecrease : null,
             size: 30,
           ),
         ],
       ),
     );
   }
+
+  bool get _canIncrease {
+    return maxQuantity == null || quantity < maxQuantity!;
+  }
 }
 
 class _IconCircleButton extends StatelessWidget {
   final IconData icon;
   final Color color;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color? backgroundColor;
   final double size;
 

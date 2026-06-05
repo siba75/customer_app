@@ -10,12 +10,16 @@ class OrderCard extends StatelessWidget {
   final Order order;
   final VoidCallback onTap;
   final VoidCallback onTrack;
+  final VoidCallback onCancel;
+  final bool isCancelling;
 
   const OrderCard({
     super.key,
     required this.order,
     required this.onTap,
     required this.onTrack,
+    required this.onCancel,
+    this.isCancelling = false,
   });
 
   @override
@@ -110,6 +114,7 @@ class OrderCard extends StatelessWidget {
               separatorBuilder: (context, index) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final item = order.items[index];
+                final image = item.image;
                 return Container(
                   width: 40,
                   height: 40,
@@ -119,12 +124,20 @@ class OrderCard extends StatelessWidget {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      item.image,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Icon(Icons.shopping_bag, color: AppColors.primary),
-                    ),
+                    child: image == null || image.isEmpty
+                        ? const Icon(
+                            Icons.shopping_bag,
+                            color: AppColors.primary,
+                          )
+                        : Image.network(
+                            image,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.shopping_bag,
+                                  color: AppColors.primary,
+                                ),
+                          ),
                   ),
                 );
               },
@@ -157,34 +170,62 @@ class OrderCard extends StatelessWidget {
   Widget _buildActions() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: onTap,
-              icon: const Icon(Icons.remove_red_eye, size: 18),
-              label: const Text('تفاصيل الطلب'),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.primary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onTap,
+                  icon: const Icon(Icons.remove_red_eye, size: 18),
+                  label: const Text('تفاصيل الطلب'),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 10),
               ),
-            ),
-          ),
-          if (order.isPending || order.isProcessing) const SizedBox(width: 12),
-          if (order.isPending || order.isProcessing)
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: onTrack,
-                icon: const Icon(Icons.track_changes, size: 18),
-                label: const Text(
-                  'تتبع الطلب',
-                  style: TextStyle(color: AppColors.white),
+              if (order.canCancel) const SizedBox(width: 12),
+              if (order.canCancel)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: onTrack,
+                    icon: const Icon(Icons.track_changes, size: 18),
+                    label: const Text(
+                      'تتبع الطلب',
+                      style: TextStyle(color: AppColors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+            ],
+          ),
+          if (order.canCancel) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isCancelling ? null : onCancel,
+                icon: isCancelling
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.cancel_outlined, size: 18),
+                label: Text(isCancelling ? 'جاري إلغاء الطلب' : 'إلغاء الطلب'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: BorderSide(color: AppColors.error),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -192,6 +233,7 @@ class OrderCard extends StatelessWidget {
                 ),
               ),
             ),
+          ],
         ],
       ),
     );

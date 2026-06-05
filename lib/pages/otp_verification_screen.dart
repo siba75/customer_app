@@ -1,5 +1,6 @@
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:customer_app/cubit_folder/otp_verification_cubit.dart';
 import 'package:customer_app/cubit_folder/otp_verification_state.dart';
 import 'package:customer_app/dio/auth_api.dart';
@@ -189,20 +190,23 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         Text(
           'تحقق من بريدك الإلكتروني',
           textAlign: TextAlign.center,
-          style: AppTypography.headlineSmall.copyWith(color: AppColors.primary),
+          style: AppTypography.headlineSmall.copyWith(
+            color: context.appText,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 10),
         Text(
           'أدخل رمز التحقق المرسل إلى',
           textAlign: TextAlign.center,
-          style: AppTypography.bodyLarge,
+          style: AppTypography.bodyLarge.copyWith(color: context.appMutedText),
         ),
         const SizedBox(height: 6),
         Text(
           widget.email,
           textAlign: TextAlign.center,
           textDirection: TextDirection.ltr,
-          style: AppTypography.titleSmall.copyWith(color: AppColors.black),
+          style: AppTypography.titleSmall.copyWith(color: context.appText),
         ),
       ],
     );
@@ -210,8 +214,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   Widget _buildOtpCard(bool isLoading) {
     return Card(
-      elevation: 6,
-      color: AppColors.white,
+      elevation: 0,
+      color: context.appSurface,
+      shadowColor: context.shadowColor(0.14),
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -237,7 +243,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   child: Text(
                     'رمز التحقق',
                     style: AppTypography.titleMedium.copyWith(
-                      color: AppColors.black,
+                      color: context.appText,
                     ),
                   ),
                 ),
@@ -263,7 +269,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             Text(
               'يتكون الرمز من 8 أرقام. يمكنك لصق الرمز كاملًا هنا.',
               textAlign: TextAlign.center,
-              style: AppTypography.bodySmall,
+              style: AppTypography.bodySmall.copyWith(
+                color: context.appMutedText,
+              ),
             ),
           ],
         ),
@@ -294,11 +302,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         decoration: InputDecoration(
           contentPadding: EdgeInsets.zero,
           filled: true,
-          fillColor: AppColors.background,
+          fillColor: context.appBackground,
           counterText: '',
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.greyLight),
+            borderSide: BorderSide(color: context.appSoftBorder),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

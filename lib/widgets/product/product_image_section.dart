@@ -1,6 +1,7 @@
 // lib/widgets/product/product_image_section.dart
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:customer_app/widgets/product/authenticated_product_image.dart';
 import 'package:flutter/material.dart';
 
 class ProductImageSection extends StatelessWidget {
@@ -14,7 +15,12 @@ class ProductImageSection extends StatelessWidget {
     final isTablet = screenWidth >= 600;
     final isWeb = screenWidth >= 1200;
     final imageHeight = isWeb ? 470.0 : (isTablet ? 410.0 : 320.0);
-    final hasDiscount = product['old_price'] != null;
+    final price = _toDouble(product['price']);
+    final oldPrice = product['old_price'] == null
+        ? null
+        : _toDouble(product['old_price']);
+    final hasDiscount = oldPrice != null && oldPrice - price >= 0.01;
+    final imageUrl = product['image']?.toString();
 
     return Container(
       height: imageHeight,
@@ -34,11 +40,11 @@ class ProductImageSection extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              product['image'],
+            AuthenticatedProductImage(
+              imageUrl: imageUrl,
               fit: BoxFit.cover,
+              placeholderBuilder: _buildLoadingWidget,
               errorBuilder: _buildErrorWidget,
-              loadingBuilder: _buildLoadingWidget,
             ),
             const _ImageGradient(),
             Positioned(
@@ -82,11 +88,7 @@ class ProductImageSection extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorWidget(
-    BuildContext context,
-    Object error,
-    StackTrace? stackTrace,
-  ) {
+  Widget _buildErrorWidget(BuildContext context) {
     return Container(
       color: context.appSoftPrimary,
       child: const Center(
@@ -99,18 +101,19 @@ class ProductImageSection extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingWidget(
-    BuildContext context,
-    Widget child,
-    ImageChunkEvent? loadingProgress,
-  ) {
-    if (loadingProgress == null) return child;
+  Widget _buildLoadingWidget(BuildContext context) {
     return Container(
       color: context.appSoftPrimary,
       child: const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
     );
+  }
+
+  double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }
 

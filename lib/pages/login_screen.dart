@@ -2,6 +2,7 @@
 import 'package:customer_app/core/const/secure_storage.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:customer_app/cubit_folder/login_cubit.dart';
 import 'package:customer_app/cubit_folder/login_state.dart';
 import 'package:customer_app/dio/auth_api.dart';
@@ -43,11 +44,11 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     context.read<LoginCubit>().login(
-          SigninModel(
+      SigninModel(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
-          ),
-        );
+      ),
+    );
   }
 
   @override
@@ -95,13 +96,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'مرحباً بك',
                   textAlign: TextAlign.center,
-                  style: AppTypography.headlineMedium,
+                  style: AppTypography.headlineMedium.copyWith(
+                    color: context.appText,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'سجل الدخول للمتابعة',
                   textAlign: TextAlign.center,
-                  style: AppTypography.bodyLarge,
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: context.appMutedText,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 _buildForm(context, isLoading),
@@ -186,11 +191,9 @@ class _LoginScreenState extends State<LoginScreen> {
         onPressed: isLoading
             ? null
             : () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ForgotPasswordScreen(),
-                  ),
-                ),
+                context,
+                MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+              ),
         child: const Text(
           'نسيت كلمة المرور؟',
           style: TextStyle(color: AppColors.primary),
@@ -215,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
               )
             : const Text(
                 'تسجيل الدخول',
-                style: TextStyle(color: AppColors.background),
+                style: TextStyle(color: AppColors.white),
               ),
       ),
     );
@@ -228,9 +231,9 @@ class _LoginScreenState extends State<LoginScreen> {
         onPressed: isLoading
             ? null
             : () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                ),
+                context,
+                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+              ),
         child: const Text(
           'إنشاء حساب جديد',
           style: TextStyle(color: AppColors.primary),

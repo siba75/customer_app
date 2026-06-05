@@ -74,6 +74,21 @@ class OrderDetailsSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       _buildPriceSummary(context),
+                      if (order.appliedDiscountName != null &&
+                          order.appliedDiscountName!.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        _buildInfoSection(
+                          context,
+                          title: 'الخصم المطبق',
+                          icon: Icons.local_offer_outlined,
+                          child: Text(
+                            order.appliedDiscountName!,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: context.appMutedText,
+                            ),
+                          ),
+                        ),
+                      ],
                       if (order.cancelledReason != null) ...[
                         const SizedBox(height: 20),
                         _buildCancelledReason(),
@@ -211,6 +226,7 @@ class OrderDetailsSheet extends StatelessWidget {
           Divider(color: context.appSoftBorder),
       itemBuilder: (context, index) {
         final item = order.items[index];
+        final image = item.image;
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
@@ -224,12 +240,17 @@ class OrderDetailsSheet extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    item.image,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        Icon(Icons.shopping_bag, color: AppColors.primary),
-                  ),
+                  child: image == null || image.isEmpty
+                      ? const Icon(Icons.shopping_bag, color: AppColors.primary)
+                      : Image.network(
+                          image,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.shopping_bag,
+                                color: AppColors.primary,
+                              ),
+                        ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -326,7 +347,7 @@ class OrderDetailsSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

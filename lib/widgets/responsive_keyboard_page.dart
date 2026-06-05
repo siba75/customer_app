@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:flutter/material.dart';
 
 class ResponsiveKeyboardPage extends StatelessWidget {
@@ -10,7 +10,7 @@ class ResponsiveKeyboardPage extends StatelessWidget {
     this.appBar,
     this.padding = const EdgeInsets.all(24),
     this.maxWidth = 480,
-    this.backgroundColor = AppColors.background,
+    this.backgroundColor,
     this.crossAxisAlignment = CrossAxisAlignment.stretch,
   });
 
@@ -18,7 +18,7 @@ class ResponsiveKeyboardPage extends StatelessWidget {
   final PreferredSizeWidget? appBar;
   final EdgeInsets padding;
   final double maxWidth;
-  final Color backgroundColor;
+  final Color? backgroundColor;
   final CrossAxisAlignment crossAxisAlignment;
 
   @override
@@ -29,7 +29,7 @@ class ResponsiveKeyboardPage extends StatelessWidget {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: appBar,
-        backgroundColor: backgroundColor,
+        backgroundColor: backgroundColor ?? context.appBackground,
         resizeToAvoidBottomInset: false,
         body: GestureDetector(
           behavior: HitTestBehavior.translucent,

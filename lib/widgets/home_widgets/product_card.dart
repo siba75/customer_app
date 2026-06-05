@@ -1,8 +1,8 @@
 // lib/core/widgets/product_card.dart
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:customer_app/widgets/product/authenticated_product_image.dart';
 import 'package:flutter/material.dart';
 
 class ProductCard extends StatelessWidget {
@@ -19,12 +19,14 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasDiscount = product['old_price'] != null;
+    final price = _toDouble(product['price']);
+    final oldPrice = product['old_price'] == null
+        ? null
+        : _toDouble(product['old_price']);
+    final hasDiscount = oldPrice != null && oldPrice - price >= 0.01;
+    final imageUrl = product['image']?.toString();
     final discountPercent = hasDiscount
-        ? ((product['old_price'] - product['price']) /
-                  product['old_price'] *
-                  100)
-              .round()
+        ? (((oldPrice - price) / oldPrice) * 100).round()
         : 0;
 
     return GestureDetector(
@@ -45,10 +47,10 @@ class ProductCard extends StatelessWidget {
             children: [
               // صورة المنتج - تغطي كامل الكارد
               Positioned.fill(
-                child: CachedNetworkImage(
-                  imageUrl: product['image'],
+                child: AuthenticatedProductImage(
+                  imageUrl: imageUrl,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
+                  placeholderBuilder: (context) => Container(
                     color: AppColors.primarySoft,
                     child: const Center(
                       child: Icon(
@@ -58,11 +60,11 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  errorWidget: (context, url, error) => Container(
+                  errorBuilder: (context) => Container(
                     color: AppColors.primarySoft,
                     child: const Center(
                       child: Icon(
-                        Icons.broken_image,
+                        Icons.image_not_supported_outlined,
                         color: AppColors.primary,
                         size: 40,
                       ),
@@ -80,8 +82,8 @@ class ProductCard extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.3),
-                        Colors.black.withOpacity(0.7),
+                        Colors.black.withValues(alpha: 0.3),
+                        Colors.black.withValues(alpha: 0.7),
                       ],
                       stops: const [0.4, 0.7, 1.0],
                     ),
@@ -104,7 +106,7 @@ class ProductCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -126,7 +128,7 @@ class ProductCard extends StatelessWidget {
                 top: 12,
                 right: 12,
                 child: CircleAvatar(
-                  backgroundColor: Colors.white.withOpacity(0.9),
+                  backgroundColor: Colors.white.withValues(alpha: 0.9),
                   radius: 18,
                   child: IconButton(
                     onPressed: () {},
@@ -181,14 +183,14 @@ class ProductCard extends StatelessWidget {
                             children: [
                               if (hasDiscount)
                                 Text(
-                                  '${product['old_price'].toStringAsFixed(2)} ل.س',
+                                  '${oldPrice.toStringAsFixed(2)} ل.س',
                                   style: AppTypography.bodySmall.copyWith(
                                     decoration: TextDecoration.lineThrough,
                                     color: Colors.white60,
                                   ),
                                 ),
                               Text(
-                                '${product['price'].toStringAsFixed(2)} ل.س',
+                                '${price.toStringAsFixed(2)} ل.س',
                                 style: AppTypography.titleMedium.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -208,7 +210,9 @@ class ProductCard extends StatelessWidget {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.secondary.withOpacity(0.4),
+                                    color: AppColors.secondary.withValues(
+                                      alpha: 0.4,
+                                    ),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -232,5 +236,11 @@ class ProductCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

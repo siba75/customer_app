@@ -2,62 +2,137 @@
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:customer_app/cubit_folder/cart_cubit.dart';
+import 'package:customer_app/cubit_folder/cart_state.dart';
+import 'package:customer_app/cubit_folder/customer_profile_cubit.dart';
+import 'package:customer_app/cubit_folder/customer_profile_state.dart';
+import 'package:customer_app/cubit_folder/order_cubit.dart';
+import 'package:customer_app/model/cart_item_model.dart';
+import 'package:customer_app/pages/orders_screen.dart';
+import 'package:customer_app/widgets/product/authenticated_product_image.dart';
 import 'package:flutter/material.dart';
-
-import 'orders_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key});
+  final double initialSubtotal;
+  final double initialDelivery;
+  final double initialDiscount;
+  final String? initialDiscountName;
+
+  const CheckoutScreen({
+    super.key,
+    this.initialSubtotal = 0,
+    this.initialDelivery = 0,
+    this.initialDiscount = 0,
+    this.initialDiscountName,
+  });
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   String _selectedPaymentMethod = 'cod';
-  String _selectedAddress = 'home';
+  String _selectedAddress = 'profile';
   bool _isProcessing = false;
+  String? _createdOrderNumber;
 
-  // بيانات وهمية للعنوان
-  final List<Map<String, dynamic>> _addresses = [
-    {
-      'id': 'home',
-      'title': 'المنزل',
-      'address': 'دمشق - باب شرقي - شارع النصر',
-      'icon': Icons.home_outlined,
-      'isDefault': true,
-    },
-    {
-      'id': 'work',
-      'title': 'العمل',
-      'address': 'دمشق - كفرسوسة - طريق المطار',
-      'icon': Icons.work_outline,
-      'isDefault': false,
-    },
-  ];
+  @override
+  void dispose() {
+    _addressController.dispose();
+    super.dispose();
+  }
 
-  // بيانات الفاتورة
-  final Map<String, dynamic> _invoice = {
-    'subtotal': 25.50,
-    'delivery': 5.00,
-    'discount': 2.50,
-    'tax': 0.00,
-    'total': 28.00,
-  };
-
-  void _placeOrder() async {
+  Future<void> _placeOrder() async {
     setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isProcessing = false);
 
-    if (!mounted) return;
+    try {
+      final cartCubit = context.read<CartCubit>();
+      final cartState = cartCubit.state;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => _buildSuccessDialog(),
-    );
+      if (cartState.items.isEmpty) {
+        throw Exception('السلة فارغة، الرجاء إضافة منتجات قبل تأكيد الطلب.');
+      }
+
+      final invalidStockItem = _firstInvalidStockItem(cartState.items);
+      if (invalidStockItem != null) {
+        throw Exception(
+          'الكمية المطلوبة من ${invalidStockItem.name} أكبر من المخزون المتاح (${invalidStockItem.maxQuantity}).',
+        );
+      }
+
+      final deliveryAddress = _deliveryAddress();
+      if (_selectedAddress == 'custom' && deliveryAddress == null) {
+        throw Exception('الرجاء إدخال عنوان التوصيل.');
+      }
+
+      final order = await context.read<OrderCubit>().createOrder(
+        items: cartState.items,
+        discountId: cartState.orderDiscountId,
+        deliveryAddress: deliveryAddress,
+      );
+
+      await cartCubit.clearCart();
+
+      if (!mounted) return;
+      setState(() {
+        _createdOrderNumber = order.orderNumber;
+        _isProcessing = false;
+      });
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => _buildSuccessDialog(),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  CustomerProfileState? _readProfileState() {
+    try {
+      return context.read<CustomerProfileCubit>().state;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _deliveryAddress() {
+    if (_selectedAddress == 'custom') {
+      final customAddress = _addressController.text.trim();
+      return customAddress.isEmpty ? null : customAddress;
+    }
+
+    final profileAddress = _readProfileState()?.profile?.address.trim() ?? '';
+    return profileAddress.isEmpty ? null : profileAddress;
+  }
+
+  Map<String, double> _invoiceFor(CartState state) {
+    return {
+      'subtotal': state.subtotal,
+      'delivery': state.delivery,
+      'discount': state.discount,
+      'total': state.total,
+    };
+  }
+
+  CartItem? _firstInvalidStockItem(List<CartItem> items) {
+    for (final item in items) {
+      if (item.maxQuantity != null && item.quantity > item.maxQuantity!) {
+        return item;
+      }
+    }
+
+    return null;
   }
 
   Widget _buildSuccessDialog() {
@@ -78,7 +153,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -97,7 +172,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'رقم الطلب: #ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(8, 13)}',
+              'رقم الطلب: ${_createdOrderNumber ?? 'غير متوفر'}',
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appMutedText,
               ),
@@ -114,7 +189,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    },
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: AppColors.grey),
                       shape: RoundedRectangleBorder(
@@ -132,9 +210,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
+                      final orderCubit = context.read<OrderCubit>();
+                      Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const OrdersScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => BlocProvider.value(
+                            value: orderCubit,
+                            child: const OrdersScreen(),
+                          ),
+                        ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -160,50 +245,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.appBackground,
-      appBar: AppBar(
-        title: const Text('إتمام الطلب'),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: context.appText,
-      ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 100),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Progress Indicator
-                _buildProgressIndicator(),
-
-                const SizedBox(height: 8),
-
-                // Delivery Address Section
-                _buildSectionHeader(' عنوان التوصيل'),
-                _buildAddressSection(),
-
-                // Order Items Preview
-                _buildSectionHeader('🛍️ منتجاتك'),
-                _buildOrderItemsPreview(),
-
-                // Payment Method
-                _buildSectionHeader('💳 طريقة الدفع'),
-                _buildPaymentSection(),
-
-                // Order Notes
-                _buildSectionHeader('📝 ملاحظات إضافية'),
-                _buildNotesSection(),
-              ],
-            ),
+    return BlocBuilder<CartCubit, CartState>(
+      builder: (context, cartState) {
+        return Scaffold(
+          backgroundColor: context.appBackground,
+          appBar: AppBar(
+            title: const Text('إتمام الطلب'),
+            centerTitle: true,
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            foregroundColor: context.appText,
           ),
-
-          // Bottom Bar with Total & Checkout Button
-          _buildBottomBar(),
-        ],
-      ),
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 112),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildProgressIndicator(),
+                    const SizedBox(height: 8),
+                    _buildSectionHeader('عنوان التوصيل'),
+                    _buildAddressSection(),
+                    _buildSectionHeader('منتجات الطلب'),
+                    _buildOrderItemsPreview(cartState),
+                    _buildSectionHeader('طريقة الدفع'),
+                    _buildPaymentSection(),
+                  ],
+                ),
+              ),
+              _buildBottomBar(cartState),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -223,7 +298,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildProgressStep(int step, String label, bool isActive) {
-    final color = isActive ? AppColors.primary : AppColors.grey;
     return Column(
       children: [
         Container(
@@ -271,7 +345,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: Text(
         title,
-        // style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w700),
         style: AppTypography.titleMedium.copyWith(
           color: context.appText,
           fontWeight: FontWeight.w700,
@@ -281,6 +354,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildAddressSection() {
+    try {
+      context.read<CustomerProfileCubit>();
+      return BlocBuilder<CustomerProfileCubit, CustomerProfileState>(
+        builder: (context, profileState) {
+          return _buildAddressContent(profileState);
+        },
+      );
+    } catch (_) {
+      return _buildAddressContent(null);
+    }
+  }
+
+  Widget _buildAddressContent(CustomerProfileState? profileState) {
+    final profileAddress = profileState?.profile?.address.trim() ?? '';
+    final hasProfileAddress = profileAddress.isNotEmpty;
+
+    if (!hasProfileAddress && _selectedAddress == 'profile') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _selectedAddress = 'custom');
+      });
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -294,32 +389,47 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       child: Column(
         children: [
-          RadioListTile<String>(
-            value: 'home',
-            groupValue: _selectedAddress,
-            onChanged: (value) => setState(() => _selectedAddress = value!),
-            title: Text('المنزل', style: TextStyle(color: context.appText)),
-            subtitle: Text(
-              'دمشق - باب شرقي - شارع النصر',
-              style: TextStyle(color: context.appMutedText),
-            ),
-            secondary: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primarySoft,
-                borderRadius: BorderRadius.circular(12),
+          if (hasProfileAddress)
+            RadioListTile<String>(
+              value: 'profile',
+              // ignore: deprecated_member_use
+              groupValue: _selectedAddress,
+              // ignore: deprecated_member_use
+              onChanged: (value) => setState(() => _selectedAddress = value!),
+              title: Text(
+                'عنوان حسابي',
+                style: TextStyle(color: context.appText),
               ),
-              child: const Icon(Icons.home, size: 24, color: AppColors.primary),
+              subtitle: Text(
+                profileAddress,
+                style: TextStyle(color: context.appMutedText),
+              ),
+              secondary: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.location_on_outlined,
+                  size: 24,
+                  color: AppColors.primary,
+                ),
+              ),
+              activeColor: AppColors.primary,
             ),
-            activeColor: AppColors.primary,
-          ),
           RadioListTile<String>(
-            value: 'work',
+            value: 'custom',
+            // ignore: deprecated_member_use
             groupValue: _selectedAddress,
+            // ignore: deprecated_member_use
             onChanged: (value) => setState(() => _selectedAddress = value!),
-            title: Text('العمل', style: TextStyle(color: context.appText)),
+            title: Text(
+              hasProfileAddress ? 'عنوان آخر' : 'عنوان التوصيل',
+              style: TextStyle(color: context.appText),
+            ),
             subtitle: Text(
-              'دمشق - كفرسوسة - طريق المطار',
+              'اكتب العنوان الذي تريد استلام الطلب عليه',
               style: TextStyle(color: context.appMutedText),
             ),
             secondary: Container(
@@ -329,34 +439,50 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
-                Icons.work,
+                Icons.edit_location_alt_outlined,
                 size: 24,
                 color: AppColors.secondary,
               ),
             ),
             activeColor: AppColors.primary,
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('إضافة عنوان جديد'),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.primary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          if (_selectedAddress == 'custom')
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: TextField(
+                controller: _addressController,
+                maxLines: 2,
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  hintText: 'مثال: دمشق - باب شرقي - شارع النصر',
+                  hintStyle: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.grey,
+                  ),
+                  filled: true,
+                  fillColor: context.appBackground,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.appSoftBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.appSoftBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppColors.primary),
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildOrderItemsPreview() {
+  Widget _buildOrderItemsPreview(CartState state) {
+    final invoice = _invoiceFor(state);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -371,37 +497,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       child: Column(
         children: [
-          _buildOrderItem(
-            'طماطم',
-            5.50,
-            2,
-            'https://picsum.photos/200/200?random=1',
-          ),
-          const Divider(),
-          _buildOrderItem(
-            'خيار',
-            3.00,
-            1,
-            'https://picsum.photos/200/200?random=2',
-          ),
+          if (state.items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              child: Text(
+                'السلة فارغة',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: context.appMutedText,
+                ),
+              ),
+            )
+          else
+            ..._buildCartItemRows(state.items),
           const Divider(),
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                Text(
-                  'المجموع',
-                  style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                _buildInvoiceRow('المجموع', invoice['subtotal'] ?? 0),
+                const SizedBox(height: 8),
+                _buildInvoiceRow('التوصيل', invoice['delivery'] ?? 0),
+                if (state.isCalculatingDiscount) ...[
+                  const SizedBox(height: 8),
+                  _buildInvoiceRow('جاري حساب الخصم', 0),
+                ] else if ((invoice['discount'] ?? 0) > 0) ...[
+                  const SizedBox(height: 8),
+                  _buildInvoiceRow(
+                    _discountLabel(state),
+                    -(invoice['discount'] ?? 0),
+                    valueColor: AppColors.success,
                   ),
-                ),
-                Text(
-                  '${_invoice['subtotal']} ل.س',
-                  style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                ],
               ],
             ),
           ),
@@ -410,30 +536,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildOrderItem(
-    String name,
-    double price,
-    int quantity,
-    String imageUrl,
-  ) {
+  List<Widget> _buildCartItemRows(List<CartItem> items) {
+    final rows = <Widget>[];
+    for (var i = 0; i < items.length; i++) {
+      rows.add(_buildOrderItem(items[i]));
+      if (i != items.length - 1) rows.add(const Divider());
+    }
+    return rows;
+  }
+
+  Widget _buildOrderItem(CartItem item) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Container(
-            width: 50,
-            height: 50,
+            width: 54,
+            height: 54,
             decoration: BoxDecoration(
               color: AppColors.primarySoft,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.shopping_bag, color: AppColors.primary),
+            clipBehavior: Clip.antiAlias,
+            child: AuthenticatedProductImage(
+              imageUrl: item.imageUrl,
+              fit: BoxFit.cover,
+              placeholderBuilder: (_) => const Icon(
+                Icons.shopping_bag_outlined,
+                color: AppColors.primary,
+              ),
+              errorBuilder: (_) => const Icon(
+                Icons.image_not_supported_outlined,
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -443,14 +577,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  item.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.titleSmall.copyWith(
                     color: context.appText,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'الكمية: $quantity',
+                  'الكمية: ${item.quantity}',
                   style: AppTypography.titleMedium.copyWith(
                     color: context.appMutedText,
                   ),
@@ -458,16 +595,62 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ],
             ),
           ),
-          Text(
-            '${(price * quantity).toStringAsFixed(2)} ل.س',
-            style: AppTypography.titleMedium.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${item.originalTotal.toStringAsFixed(2)} ل.س',
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (item.hasDiscount) ...[
+                const SizedBox(height: 3),
+                Text(
+                  '${item.total.toStringAsFixed(2)} ل.س',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildInvoiceRow(String label, double value, {Color? valueColor}) {
+    final formattedValue = value < 0
+        ? '-${value.abs().toStringAsFixed(2)} ل.س'
+        : '${value.toStringAsFixed(2)} ل.س';
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+        ),
+        Text(
+          formattedValue,
+          style: AppTypography.bodyMedium.copyWith(
+            color: valueColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _discountLabel(CartState state) {
+    if (state.discountName != null && state.discountName!.isNotEmpty) {
+      return 'الخصم - ${state.discountName}';
+    }
+    if (state.itemDiscount > 0) return 'خصم المنتجات';
+    return 'الخصم';
   }
 
   Widget _buildPaymentSection() {
@@ -486,7 +669,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           RadioListTile<String>(
             value: 'cod',
+            // ignore: deprecated_member_use
             groupValue: _selectedPaymentMethod,
+            // ignore: deprecated_member_use
             onChanged: (value) =>
                 setState(() => _selectedPaymentMethod = value!),
             title: Text(
@@ -494,13 +679,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               style: AppTypography.titleLarge.copyWith(color: context.appText),
             ),
             subtitle: Text(
-              ' ادفع نقداً عند استلام طلبك  ',
+              'ادفع نقداً عند استلام طلبك',
               style: TextStyle(color: context.appMutedText),
             ),
             secondary: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -516,35 +701,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildNotesSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.appSurface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: context.appCardShadow(
-          alpha: 0.1,
-          blur: 24,
-          offset: const Offset(0, 10),
-        ),
-      ),
-      child: TextField(
-        controller: _notesController,
-        maxLines: 3,
-        decoration: InputDecoration(
-          hintText: 'أضف ملاحظات للطلب (اختياري)...',
-          hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.grey),
-          border: InputBorder.none,
-          filled: true,
-          fillColor: context.appBackground,
-          contentPadding: const EdgeInsets.all(14),
-        ),
-      ),
-    );
-  }
+  Widget _buildBottomBar(CartState state) {
+    final invoice = _invoiceFor(state);
 
-  Widget _buildBottomBar() {
     return Positioned(
       bottom: 0,
       left: 0,
@@ -561,67 +720,66 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'الإجمالي',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${_invoice['total'].toStringAsFixed(2)} ل.س',
-                          style: AppTypography.headlineSmall.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _isProcessing ? null : _placeOrder,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        elevation: 0,
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'الإجمالي',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.grey,
                       ),
-                      child: _isProcessing
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Text(
-                                  'تأكيد الطلب',
-                                  style: TextStyle(color: AppColors.white),
-                                ),
-                                SizedBox(width: 8),
-                                Icon(Icons.arrow_forward, size: 18),
-                              ],
-                            ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(invoice['total'] ?? 0).toStringAsFixed(2)} ل.س',
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: _isProcessing || state.items.isEmpty
+                      ? null
+                      : _placeOrder,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
                   ),
-                ],
+                  child: _isProcessing
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'تأكيد الطلب',
+                              style: TextStyle(color: AppColors.white),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, size: 18),
+                          ],
+                        ),
+                ),
               ),
             ],
           ),

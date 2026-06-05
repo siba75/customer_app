@@ -12,10 +12,11 @@ class ProductPriceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isTablet = MediaQuery.of(context).size.width >= 600;
-    final price = (product['price'] as num).toDouble();
+    final price = _toDouble(product['price']);
     final oldPrice = product['old_price'] == null
         ? null
-        : (product['old_price'] as num).toDouble();
+        : _toDouble(product['old_price']);
+    final hasDiscount = oldPrice != null && oldPrice - price >= 0.01;
 
     return Row(
       children: [
@@ -36,7 +37,7 @@ class ProductPriceRow extends StatelessWidget {
                           fontWeight: FontWeight.w900,
                         ),
               ),
-              if (oldPrice != null)
+              if (hasDiscount)
                 Text(
                   '${oldPrice.toStringAsFixed(2)} ل.س',
                   style: AppTypography.bodyMedium.copyWith(
@@ -64,5 +65,11 @@ class ProductPriceRow extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

@@ -6,28 +6,40 @@ class OrderItem {
   final String name;
   final int quantity;
   final double price;
-  final String image;
+  final String? image;
 
-  OrderItem({
+  const OrderItem({
     required this.name,
     required this.quantity,
     required this.price,
-    required this.image,
+    this.image,
   });
 
   double get total => price * quantity;
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
+    final product = json['product'] is Map<String, dynamic>
+        ? json['product'] as Map<String, dynamic>
+        : <String, dynamic>{};
+
     return OrderItem(
-      name: json['name'],
-      quantity: json['quantity'],
-      price: json['price'].toDouble(),
-      image: json['image'],
+      name: product['name']?.toString() ?? json['name']?.toString() ?? '',
+      quantity: _toInt(json['quantity']),
+      price: _toDouble(json['unitPrice'] ?? json['price']),
+      image: json['image']?.toString(),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {'name': name, 'quantity': quantity, 'price': price, 'image': image};
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }
 
@@ -52,8 +64,9 @@ class Order {
   final String? deliveredAt;
   final String? estimatedDelivery;
   final String? cancelledReason;
+  final String? appliedDiscountName;
 
-  Order({
+  const Order({
     required this.id,
     required this.orderNumber,
     required this.date,
@@ -74,37 +87,85 @@ class Order {
     this.deliveredAt,
     this.estimatedDelivery,
     this.cancelledReason,
+    this.appliedDiscountName,
   });
 
   bool get isPending => status == 'pending';
   bool get isProcessing => status == 'processing';
   bool get isDelivered => status == 'delivered';
   bool get isCancelled => status == 'cancelled';
-  bool get hasTracking => trackingNumber != null;
+  bool get canCancel => isPending || isProcessing;
+  bool get hasTracking => trackingNumber != null && trackingNumber!.isNotEmpty;
 
   factory Order.fromJson(Map<String, dynamic> json) {
+    final createdAt = DateTime.tryParse(json['createdAt']?.toString() ?? '');
+    final status = (json['status']?.toString() ?? '').toLowerCase();
+    final appliedDiscount = json['appliedDiscount'] is Map<String, dynamic>
+        ? json['appliedDiscount'] as Map<String, dynamic>
+        : <String, dynamic>{};
+
     return Order(
-      id: json['id'],
-      orderNumber: json['orderNumber'],
-      date: json['date'],
-      dateFormatted: json['dateFormatted'],
-      time: json['time'],
-      total: json['total'].toDouble(),
-      subtotal: json['subtotal'].toDouble(),
-      delivery: json['delivery'].toDouble(),
-      discount: json['discount'].toDouble(),
-      status: json['status'],
-      statusText: json['status_text'],
-      statusColor: _getStatusColor(json['status']),
-      items: (json['items'] as List).map((i) => OrderItem.fromJson(i)).toList(),
-      address: json['address'],
-      paymentMethod: json['payment_method'],
-      paymentText: json['payment_text'],
-      trackingNumber: json['tracking_number'],
-      deliveredAt: json['delivered_at'],
-      estimatedDelivery: json['estimated_delivery'],
-      cancelledReason: json['cancelled_reason'],
+      id: json['id']?.toString() ?? '',
+      orderNumber: 'ORD-${json['id'] ?? ''}',
+      date: _dateValue(createdAt),
+      dateFormatted: _dateFormatted(createdAt),
+      time: _timeFormatted(createdAt),
+      total: _toDouble(json['total']),
+      subtotal: _toDouble(json['subtotal']),
+      delivery: 0,
+      discount: _toDouble(json['discountAmount']),
+      status: status,
+      statusText: _statusText(status),
+      statusColor: _getStatusColor(status),
+      items: json['items'] is List
+          ? (json['items'] as List)
+                .whereType<Map<String, dynamic>>()
+                .map(OrderItem.fromJson)
+                .toList()
+          : const [],
+      address: json['deliveryAddress']?.toString() ?? 'العنوان الافتراضي',
+      paymentMethod: 'cod',
+      paymentText: 'الدفع عند الاستلام',
+      appliedDiscountName: appliedDiscount['name']?.toString(),
     );
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static String _dateValue(DateTime? date) {
+    if (date == null) return '';
+    return '${date.year}-${_twoDigits(date.month)}-${_twoDigits(date.day)}';
+  }
+
+  static String _dateFormatted(DateTime? date) {
+    if (date == null) return 'غير معروف';
+    return '${_twoDigits(date.day)}/${_twoDigits(date.month)}/${date.year}';
+  }
+
+  static String _timeFormatted(DateTime? date) {
+    if (date == null) return '';
+    return '${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+  }
+
+  static String _twoDigits(int value) => value.toString().padLeft(2, '0');
+
+  static String _statusText(String status) {
+    switch (status) {
+      case 'delivered':
+        return 'تم التوصيل';
+      case 'processing':
+        return 'قيد المعالجة';
+      case 'pending':
+        return 'قيد الانتظار';
+      case 'cancelled':
+        return 'ملغي';
+      default:
+        return 'غير معروف';
+    }
   }
 
   static Color _getStatusColor(String status) {

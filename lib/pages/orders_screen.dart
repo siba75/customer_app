@@ -1,13 +1,16 @@
 // lib/screens/orders/orders_screen.dart
+import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:customer_app/cubit_folder/order_cubit.dart';
+import 'package:customer_app/cubit_folder/order_state.dart';
 import 'package:customer_app/model/order_model.dart';
 import 'package:customer_app/widgets/order_widgets/empty_state.dart';
-import 'package:customer_app/widgets/order_widgets/mach_Order.dart';
 import 'package:customer_app/widgets/order_widgets/order_card.dart';
 import 'package:customer_app/widgets/order_widgets/order_details_sheet.dart';
 import 'package:customer_app/widgets/order_widgets/order_tracking_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -17,19 +20,23 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
-  String _selectedFilter = 'all';
+  final String _selectedFilter = 'all';
 
-  List<Order> get _filteredOrders {
+  List<Order> _filteredOrders(List<Order> orders) {
     switch (_selectedFilter) {
       case 'pending':
-        return mockOrders.where((order) => order.isPending).toList();
+        return orders.where((order) => order.isPending).toList();
       case 'processing':
-        return mockOrders.where((order) => order.isProcessing).toList();
+        return orders.where((order) => order.isProcessing).toList();
       case 'delivered':
-        return mockOrders.where((order) => order.isDelivered).toList();
+        return orders.where((order) => order.isDelivered).toList();
       default:
-        return mockOrders;
+        return orders;
     }
+  }
+
+  Future<void> _refreshOrders() {
+    return context.read<OrderCubit>().loadOrders();
   }
 
   void _showOrderDetails(Order order) {
@@ -41,26 +48,107 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
+  Future<void> _confirmCancelOrder(Order order) async {
+    final shouldCancel = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('إلغاء الطلب'),
+        content: Text('هل أنت متأكد من إلغاء الطلب ${order.orderNumber}؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('تراجع', style: TextStyle(color: AppColors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text(
+              'إلغاء الطلب',
+              style: TextStyle(color: AppColors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldCancel != true || !mounted) return;
+
+    try {
+      await context.read<OrderCubit>().cancelOrder(order);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم إلغاء الطلب بنجاح'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filteredOrders = _filteredOrders;
-
     return Scaffold(
       backgroundColor: context.appBackground,
-      appBar: AppBar(title: Text('طلباتي')),
-      body: filteredOrders.isEmpty
-          ? const OrderEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredOrders.length,
-              itemBuilder: (context, index) {
-                return OrderCard(
-                  order: filteredOrders[index],
-                  onTap: () => _showOrderDetails(filteredOrders[index]),
-                  onTrack: () => _showTrackDialog(filteredOrders[index]),
-                );
-              },
-            ),
+      appBar: AppBar(title: const Text('طلباتي')),
+      body: BlocBuilder<OrderCubit, OrderState>(
+        builder: (context, state) {
+          final filteredOrders = _filteredOrders(state.orders);
+
+          if (state.isLoading && state.orders.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.errorMessage != null && state.orders.isEmpty) {
+            return _OrdersMessage(
+              icon: Icons.error_outline,
+              message: state.errorMessage!,
+              onRetry: _refreshOrders,
+            );
+          }
+
+          return RefreshIndicator(
+            color: AppColors.primary,
+            backgroundColor: context.appSurface,
+            onRefresh: _refreshOrders,
+            child: filteredOrders.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [OrderEmptyState()],
+                  )
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredOrders.length,
+                    itemBuilder: (context, index) {
+                      return OrderCard(
+                        order: filteredOrders[index],
+                        onTap: () => _showOrderDetails(filteredOrders[index]),
+                        onTrack: () => _showTrackDialog(filteredOrders[index]),
+                        onCancel: () =>
+                            _confirmCancelOrder(filteredOrders[index]),
+                        isCancelling:
+                            state.cancellingOrderId?.toString() ==
+                            filteredOrders[index].id,
+                      );
+                    },
+                  ),
+          );
+        },
+      ),
     );
   }
 
@@ -68,6 +156,46 @@ class _OrdersScreenState extends State<OrdersScreen> {
     showDialog(
       context: context,
       builder: (context) => OrderTrackingDialog(order: order),
+    );
+  }
+}
+
+class _OrdersMessage extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final VoidCallback onRetry;
+
+  const _OrdersMessage({
+    required this.icon,
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 42, color: AppColors.error),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium.copyWith(
+                color: context.appMutedText,
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: const Text('إعادة المحاولة'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -7,6 +7,8 @@ class CartSummaryCard extends StatelessWidget {
   final double subtotal;
   final double delivery;
   final double discount;
+  final String? discountName;
+  final bool isCalculatingDiscount;
   final VoidCallback onCheckout;
 
   const CartSummaryCard({
@@ -14,6 +16,8 @@ class CartSummaryCard extends StatelessWidget {
     required this.subtotal,
     required this.delivery,
     required this.discount,
+    this.discountName,
+    this.isCalculatingDiscount = false,
     required this.onCheckout,
   });
 
@@ -50,10 +54,16 @@ class CartSummaryCard extends StatelessWidget {
                   _SummaryRow(label: 'المجموع', value: subtotal),
                   const SizedBox(height: 10),
                   _SummaryRow(label: 'التوصيل', value: delivery),
+                  if (isCalculatingDiscount) ...[
+                    const SizedBox(height: 10),
+                    const _CalculatingDiscountRow(),
+                  ],
                   if (discount > 0) ...[
                     const SizedBox(height: 10),
                     _SummaryRow(
-                      label: 'الخصم',
+                      label: discountName == null || discountName!.isEmpty
+                          ? 'الخصم'
+                          : 'الخصم - $discountName',
                       value: -discount,
                       valueColor: AppColors.success,
                     ),
@@ -113,6 +123,28 @@ class CartSummaryCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CalculatingDiscountRow extends StatelessWidget {
+  const _CalculatingDiscountRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'حساب الخصم',
+          style: AppTypography.bodyMedium.copyWith(color: context.appMutedText),
+        ),
+        const SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ],
     );
   }
 }

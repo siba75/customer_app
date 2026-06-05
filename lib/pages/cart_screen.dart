@@ -2,123 +2,95 @@
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
-import 'package:customer_app/model/cart_item_model.dart';
+import 'package:customer_app/cubit_folder/cart_cubit.dart';
+import 'package:customer_app/cubit_folder/cart_state.dart';
+import 'package:customer_app/cubit_folder/customer_profile_cubit.dart';
+import 'package:customer_app/cubit_folder/order_cubit.dart';
 import 'package:customer_app/pages/checkout_screen.dart';
 import 'package:customer_app/widgets/cart_widgets/cart_empty_state.dart';
 import 'package:customer_app/widgets/cart_widgets/cart_item_card.dart';
 import 'package:customer_app/widgets/cart_widgets/cart_summary_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class CartScreen extends StatefulWidget {
+class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  @override
-  State<CartScreen> createState() => _CartScreenState();
-}
-
-class _CartScreenState extends State<CartScreen> {
-  late List<CartItem> _items;
-
-  @override
-  void initState() {
-    super.initState();
-    _items = List.of(mockCartItems);
-  }
-
-  double get _subtotal {
-    return _items.fold(0, (sum, item) => sum + item.total);
-  }
-
-  double get _delivery => _subtotal >= 30 ? 0 : 5;
-
-  double get _discount {
-    return _items.fold(0, (sum, item) {
-      if (!item.hasDiscount) return sum;
-      return sum + ((item.oldPrice! - item.price) * item.quantity);
-    });
-  }
-
-  int get _itemsCount {
-    return _items.fold(0, (sum, item) => sum + item.quantity);
-  }
-
-  void _increaseQuantity(CartItem item) {
-    setState(() {
-      _items = _items.map((cartItem) {
-        if (cartItem.id != item.id) return cartItem;
-        return cartItem.copyWith(quantity: cartItem.quantity + 1);
-      }).toList();
-    });
-  }
-
-  void _decreaseQuantity(CartItem item) {
-    if (item.quantity == 1) return;
-
-    setState(() {
-      _items = _items.map((cartItem) {
-        if (cartItem.id != item.id) return cartItem;
-        return cartItem.copyWith(quantity: cartItem.quantity - 1);
-      }).toList();
-    });
-  }
-
-  void _removeItem(CartItem item) {
-    setState(() {
-      _items = _items.where((cartItem) => cartItem.id != item.id).toList();
-    });
-  }
-
-  void _goToCheckout() {
+  void _goToCheckout(BuildContext context, CartState state) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const CheckoutScreen()),
+      MaterialPageRoute(
+        builder: (_) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: context.read<CartCubit>()),
+            BlocProvider.value(value: context.read<OrderCubit>()),
+            BlocProvider.value(value: context.read<CustomerProfileCubit>()),
+          ],
+          child: CheckoutScreen(
+            initialSubtotal: state.subtotal,
+            initialDelivery: state.delivery,
+            initialDiscount: state.discount,
+            initialDiscountName: state.discountName,
+          ),
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasItems = _items.isNotEmpty;
-
-    return Scaffold(
-      backgroundColor: context.appBackground,
-      body: Column(
-        children: [
-          Expanded(
-            child: hasItems
-                ? CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: _CartHeader(count: _itemsCount),
-                      ),
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        sliver: SliverList.builder(
-                          itemCount: _items.length,
-                          itemBuilder: (context, index) {
-                            final item = _items[index];
-                            return CartItemCard(
-                              item: item,
-                              onIncrease: () => _increaseQuantity(item),
-                              onDecrease: () => _decreaseQuantity(item),
-                              onRemove: () => _removeItem(item),
-                            );
-                          },
-                        ),
-                      ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                    ],
-                  )
-                : const CartEmptyState(),
+    return BlocBuilder<CartCubit, CartState>(
+      builder: (context, state) {
+        return Scaffold(
+          backgroundColor: context.appBackground,
+          body: Column(
+            children: [
+              Expanded(
+                child: state.hasItems
+                    ? CustomScrollView(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: _CartHeader(count: state.itemsCount),
+                          ),
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            sliver: SliverList.builder(
+                              itemCount: state.items.length,
+                              itemBuilder: (context, index) {
+                                final item = state.items[index];
+                                return CartItemCard(
+                                  item: item,
+                                  onIncrease: () => context
+                                      .read<CartCubit>()
+                                      .increaseQuantity(item),
+                                  onDecrease: () => context
+                                      .read<CartCubit>()
+                                      .decreaseQuantity(item),
+                                  onRemove: () => context
+                                      .read<CartCubit>()
+                                      .removeItem(item),
+                                );
+                              },
+                            ),
+                          ),
+                          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                        ],
+                      )
+                    : const CartEmptyState(),
+              ),
+              if (state.hasItems)
+                CartSummaryCard(
+                  subtotal: state.subtotal,
+                  delivery: state.delivery,
+                  discount: state.discount,
+                  discountName: state.discountName,
+                  isCalculatingDiscount: state.isCalculatingDiscount,
+                  onCheckout: () => _goToCheckout(context, state),
+                ),
+            ],
           ),
-          if (hasItems)
-            CartSummaryCard(
-              subtotal: _subtotal,
-              delivery: _delivery,
-              discount: _discount,
-              onCheckout: _goToCheckout,
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
