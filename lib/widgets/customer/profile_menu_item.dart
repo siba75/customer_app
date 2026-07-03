@@ -11,6 +11,7 @@ class ProfileMenuItem extends StatelessWidget {
   final VoidCallback onTap;
   final Widget? trailing;
   final bool isLogout;
+  final bool showChevron;
 
   const ProfileMenuItem({
     super.key,
@@ -20,6 +21,7 @@ class ProfileMenuItem extends StatelessWidget {
     required this.onTap,
     this.trailing,
     this.isLogout = false,
+    this.showChevron = true,
   });
 
   @override
@@ -52,12 +54,14 @@ class ProfileMenuItem extends StatelessWidget {
       ),
       trailing:
           trailing ??
-          Icon(
-            Icons.arrow_forward_ios,
-            size: 14,
-            color: isLogout ? AppColors.error : AppColors.grey,
-          ),
-      onTap: onTap,
+          (showChevron
+              ? Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: isLogout ? AppColors.error : AppColors.grey,
+                )
+              : null),
+      onTap: showChevron || trailing != null ? onTap : null,
     );
   }
 }

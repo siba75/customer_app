@@ -153,13 +153,13 @@ class OrderCard extends StatelessWidget {
                   color: context.appMutedText,
                 ),
               ),
-              Text(
-                '${order.total.toStringAsFixed(2)}  ل.س',
-                style: AppTypography.titleMedium.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // Text(
+              //   '${order.total.toStringAsFixed(2)}  ل.س',
+              //   style: AppTypography.titleMedium.copyWith(
+              //     color: AppColors.primary,
+              //     fontWeight: FontWeight.bold,
+              //   ),
+              // ),
             ],
           ),
         ],
@@ -188,25 +188,26 @@ class OrderCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (order.canCancel) const SizedBox(width: 12),
-              if (order.canCancel)
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: onTrack,
-                    icon: const Icon(Icons.track_changes, size: 18),
-                    label: const Text(
-                      'تتبع الطلب',
-                      style: TextStyle(color: AppColors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: onTrack,
+                  icon: const Icon(Icons.track_changes, size: 18),
+                  label: const Text(
+                    'تتبع الطلب',
+                    style: TextStyle(color: AppColors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: order.isTrackingFinished
+                        ? order.statusColor
+                        : AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
+              ),
             ],
           ),
           if (order.canCancel) ...[

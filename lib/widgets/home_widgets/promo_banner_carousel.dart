@@ -7,13 +7,8 @@ import 'package:flutter/material.dart';
 
 class PromoBannerCarousel extends StatefulWidget {
   final List<dynamic> banners;
-  final ValueChanged<AdModel> onActionTap;
 
-  const PromoBannerCarousel({
-    super.key,
-    required this.banners,
-    required this.onActionTap,
-  });
+  const PromoBannerCarousel({super.key, required this.banners});
 
   @override
   State<PromoBannerCarousel> createState() => _PromoBannerCarouselState();
@@ -91,37 +86,44 @@ class _PromoBannerCarouselState extends State<PromoBannerCarousel> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 520),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              final slideAnimation = Tween<Offset>(
-                begin: const Offset(0.08, 0),
-                end: Offset.zero,
-              ).animate(animation);
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 520),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  final slideAnimation = Tween<Offset>(
+                    begin: const Offset(0.08, 0),
+                    end: Offset.zero,
+                  ).animate(animation);
 
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(position: slideAnimation, child: child),
-              );
-            },
-            child: PromoBannerCard(
-              key: ValueKey(banners[_currentIndex].id),
-              banner: banners[_currentIndex],
-              onActionTap: () => widget.onActionTap(banners[_currentIndex]),
-            ),
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: slideAnimation,
+                      child: child,
+                    ),
+                  );
+                },
+                child: PromoBannerCard(
+                  key: ValueKey(banners[_currentIndex].id),
+                  banner: banners[_currentIndex],
+                ),
+              ),
+              const SizedBox(height: 10),
+              PromoBannerIndicator(
+                count: banners.length,
+                currentIndex: _currentIndex,
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          PromoBannerIndicator(
-            count: banners.length,
-            currentIndex: _currentIndex,
-          ),
-        ],
+        ),
       ),
     );
   }

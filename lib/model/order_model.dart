@@ -91,10 +91,13 @@ class Order {
   });
 
   bool get isPending => status == 'pending';
-  bool get isProcessing => status == 'processing';
+  bool get isPreparing => status == 'preparing';
+  bool get isProcessing => isPreparing;
+  bool get isOutForDelivery => status == 'out_for_delivery';
   bool get isDelivered => status == 'delivered';
   bool get isCancelled => status == 'cancelled';
-  bool get canCancel => isPending || isProcessing;
+  bool get isTrackingFinished => isDelivered || isCancelled;
+  bool get canCancel => isPending || isPreparing;
   bool get hasTracking => trackingNumber != null && trackingNumber!.isNotEmpty;
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -157,8 +160,10 @@ class Order {
     switch (status) {
       case 'delivered':
         return 'تم التوصيل';
-      case 'processing':
-        return 'قيد المعالجة';
+      case 'preparing':
+        return 'قيد التحضير';
+      case 'out_for_delivery':
+        return 'خرج للتوصيل';
       case 'pending':
         return 'قيد الانتظار';
       case 'cancelled':
@@ -172,8 +177,10 @@ class Order {
     switch (status) {
       case 'delivered':
         return AppColors.success;
-      case 'processing':
+      case 'preparing':
         return AppColors.secondary;
+      case 'out_for_delivery':
+        return AppColors.primaryLight;
       case 'pending':
         return AppColors.primaryDark;
       case 'cancelled':

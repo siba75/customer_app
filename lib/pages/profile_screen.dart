@@ -5,8 +5,12 @@ import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:customer_app/core/theem/theme_controller.dart';
 import 'package:customer_app/cubit_folder/customer_profile_cubit.dart';
 import 'package:customer_app/cubit_folder/customer_profile_state.dart';
+import 'package:customer_app/cubit_folder/order_cubit.dart';
+import 'package:customer_app/cubit_folder/order_state.dart';
 import 'package:customer_app/dio/customer_api.dart';
+import 'package:customer_app/dio/order_api.dart';
 import 'package:customer_app/model/customer_profile_model.dart';
+import 'package:customer_app/pages/loyalty_rewards_screen.dart';
 import 'package:customer_app/pages/notifications_screen.dart';
 import 'package:customer_app/widgets/customer/profile_header.dart';
 import 'package:customer_app/widgets/customer/profile_menu_item.dart';
@@ -25,8 +29,13 @@ class ProfileScreen extends StatelessWidget {
       return const _ProfileView();
     }
 
-    return BlocProvider(
-      create: (_) => CustomerProfileCubit(CustomerApi())..loadProfile(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => CustomerProfileCubit(CustomerApi())..loadProfile(),
+        ),
+        BlocProvider(create: (_) => OrderCubit(OrderApi())..loadOrders()),
+      ],
       child: const _ProfileView(),
     );
   }
@@ -102,38 +111,58 @@ class _StatsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          const Expanded(
-            child: ProfileStatsCard(
-              title: 'الطلبات',
-              value: '24',
-              icon: Icons.shopping_bag_outlined,
-              color: AppColors.primary,
-            ),
+    return BlocBuilder<OrderCubit, OrderState>(
+      builder: (context, orderState) {
+        final ordersCount = orderState.isLoading && orderState.orders.isEmpty
+            ? '...'
+            : orderState.orders.length.toString();
+
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Expanded(
+                child: ProfileStatsCard(
+                  title: 'الطلبات',
+                  value: ordersCount,
+                  icon: Icons.shopping_bag_outlined,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ProfileStatsCard(
+                  title: 'نقاط الولاء',
+                  value: profile.loyaltyPoints.toString(),
+                  icon: Icons.star_outline,
+                  color: AppColors.secondary,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LoyaltyRewardsScreen(),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ProfileStatsCard(
+                  title: 'إجمالي الشراء',
+                  value: _formatTotalSpent(profile.totalSpent),
+                  icon: Icons.payments_outlined,
+                  color: AppColors.success,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ProfileStatsCard(
-              title: 'نقاط الولاء',
-              value: profile.loyaltyPoints.toString(),
-              icon: Icons.star_outline,
-              color: AppColors.secondary,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ProfileStatsCard(
-              title: 'إجمالي الشراء',
-              value: profile.totalSpent.toStringAsFixed(0),
-              icon: Icons.payments_outlined,
-              color: AppColors.success,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
+    );
+  }
+
+  String _formatTotalSpent(double totalSpent) {
+    return totalSpent.toStringAsFixed(
+      totalSpent.truncateToDouble() == totalSpent ? 0 : 2,
     );
   }
 }
@@ -148,7 +177,7 @@ class _MenuSection extends StatelessWidget {
     final items = [
       _item(
         Icons.person_outline,
-        'المعلومات الشخصية',
+        'تعديل المعلومات الشخصية',
         '${profile.fullName}، ${profile.phoneNumber}',
         () => _showEditProfileSheet(context, profile),
       ),
@@ -156,7 +185,17 @@ class _MenuSection extends StatelessWidget {
         Icons.location_on_outlined,
         'عنواني',
         profile.address.isEmpty ? 'لم يتم إضافة عنوان' : profile.address,
-        () => _showEditProfileSheet(context, profile),
+        () {},
+        showChevron: false,
+      ),
+      _item(
+        Icons.card_giftcard_outlined,
+        'مكافآت الولاء',
+        'العروض المتاحة حسب نقاطك',
+        () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const LoyaltyRewardsScreen()),
+        ),
       ),
       _item(
         Icons.notifications_none,
@@ -226,6 +265,7 @@ class _MenuSection extends StatelessWidget {
     VoidCallback onTap, {
     Widget? trailing,
     bool isLogout = false,
+    bool showChevron = true,
   }) {
     return ProfileMenuItem(
       icon: icon,
@@ -234,6 +274,7 @@ class _MenuSection extends StatelessWidget {
       onTap: onTap,
       trailing: trailing,
       isLogout: isLogout,
+      showChevron: showChevron,
     );
   }
 
@@ -597,7 +638,7 @@ class _Footer extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 24),
       child: Center(
         child: Text(
-          '© 2024 Smart Store',
+          '© 2026 Smart Store',
           style: TextStyle(fontSize: 11, color: AppColors.grey),
         ),
       ),

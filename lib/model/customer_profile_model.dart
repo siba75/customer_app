@@ -21,13 +21,12 @@ class CustomerProfileModel {
         : <String, dynamic>{};
 
     return CustomerProfileModel(
-      fullName: json['fullName']?.toString() ?? '',
-      email: json['email']?.toString() ?? '',
-      phoneNumber: json['phoneNumber']?.toString() ?? '',
-      address:
-          customer['address']?.toString() ?? json['address']?.toString() ?? '',
-      loyaltyPoints: _toInt(customer['loyaltyPoints']),
-      totalSpent: _toDouble(customer['totalSpent']),
+      fullName: _toText(json['fullName']),
+      email: _toText(json['email']),
+      phoneNumber: _toText(json['phoneNumber']),
+      address: _toText(customer['address'], fallback: _toText(json['address'])),
+      loyaltyPoints: _toInt(customer['loyaltyPoints'] ?? json['loyaltyPoints']),
+      totalSpent: _toDouble(customer['totalSpent'] ?? json['totalSpent']),
     );
   }
 
@@ -67,5 +66,14 @@ class CustomerProfileModel {
     if (value is double) return value;
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static String _toText(dynamic value, {String fallback = ''}) {
+    final text = value?.toString().trim();
+    if (text == null || text.isEmpty) return fallback;
+    if (text.toLowerCase() == 'null' || text.toLowerCase() == 'undefined') {
+      return fallback;
+    }
+    return text;
   }
 }

@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 class HomeAppBarTitle extends StatelessWidget {
   final String? fullName;
   final int loyaltyPoints;
+  final VoidCallback? onLoyaltyTap;
 
   const HomeAppBarTitle({
     super.key,
     required this.fullName,
     required this.loyaltyPoints,
+    this.onLoyaltyTap,
   });
 
   @override
@@ -20,7 +22,7 @@ class HomeAppBarTitle extends StatelessWidget {
 
     return Row(
       children: [
-        _LoyaltyPill(loyaltyPoints: loyaltyPoints),
+        _LoyaltyPill(loyaltyPoints: loyaltyPoints, onTap: onLoyaltyTap),
         const SizedBox(width: 8),
         const _NotificationButton(),
         const SizedBox(width: 10),
@@ -77,30 +79,38 @@ class HomeAppBarTitle extends StatelessWidget {
 
 class _LoyaltyPill extends StatelessWidget {
   final int loyaltyPoints;
+  final VoidCallback? onTap;
 
-  const _LoyaltyPill({required this.loyaltyPoints});
+  const _LoyaltyPill({required this.loyaltyPoints, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.secondarySoft,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.star, size: 15, color: AppColors.secondary),
-          const SizedBox(width: 4),
-          Text(
-            '$loyaltyPoints',
-            style: const TextStyle(
-              color: AppColors.secondary,
-              fontWeight: FontWeight.bold,
-            ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.secondarySoft,
+            borderRadius: BorderRadius.circular(18),
           ),
-        ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.star, size: 15, color: AppColors.secondary),
+              const SizedBox(width: 4),
+              Text(
+                '$loyaltyPoints',
+                style: const TextStyle(
+                  color: AppColors.secondary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

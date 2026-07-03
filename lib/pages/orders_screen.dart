@@ -9,6 +9,7 @@ import 'package:customer_app/widgets/order_widgets/empty_state.dart';
 import 'package:customer_app/widgets/order_widgets/order_card.dart';
 import 'package:customer_app/widgets/order_widgets/order_details_sheet.dart';
 import 'package:customer_app/widgets/order_widgets/order_tracking_dialog.dart';
+import 'package:customer_app/widgets/order_widgets/orders_loading_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -26,8 +27,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
     switch (_selectedFilter) {
       case 'pending':
         return orders.where((order) => order.isPending).toList();
+      case 'preparing':
       case 'processing':
         return orders.where((order) => order.isProcessing).toList();
+      case 'out_for_delivery':
+        return orders.where((order) => order.isOutForDelivery).toList();
       case 'delivered':
         return orders.where((order) => order.isDelivered).toList();
       default:
@@ -103,13 +107,32 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.appBackground,
-      appBar: AppBar(title: const Text('طلباتي')),
+      appBar: AppBar(
+        title: const Text('طلباتي'),
+        actions: [
+          BlocBuilder<OrderCubit, OrderState>(
+            builder: (context, state) {
+              return IconButton(
+                tooltip: 'تحديث الطلبات',
+                onPressed: state.isLoading ? null : _refreshOrders,
+                icon: state.isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh),
+              );
+            },
+          ),
+        ],
+      ),
       body: BlocBuilder<OrderCubit, OrderState>(
         builder: (context, state) {
           final filteredOrders = _filteredOrders(state.orders);
 
           if (state.isLoading && state.orders.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const OrdersLoadingSkeleton();
           }
 
           if (state.errorMessage != null && state.orders.isEmpty) {

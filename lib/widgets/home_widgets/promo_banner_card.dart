@@ -5,22 +5,18 @@ import 'package:flutter/material.dart';
 
 class PromoBannerCard extends StatelessWidget {
   final AdModel banner;
-  final VoidCallback onActionTap;
 
-  const PromoBannerCard({
-    super.key,
-    required this.banner,
-    required this.onActionTap,
-  });
+  const PromoBannerCard({super.key, required this.banner});
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 360;
+        final cardHeight = (constraints.maxWidth * 0.62).clamp(214.0, 268.0);
 
         return SizedBox(
-          height: isCompact ? 318 : 304,
+          height: cardHeight,
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -54,11 +50,7 @@ class PromoBannerCard extends StatelessWidget {
                   right: 88,
                   child: _GlowCircle(size: 92, opacity: 0.08),
                 ),
-                _BannerContent(
-                  banner: banner,
-                  isCompact: isCompact,
-                  onActionTap: onActionTap,
-                ),
+                _BannerContent(banner: banner, isCompact: isCompact),
               ],
             ),
           ),
@@ -71,13 +63,8 @@ class PromoBannerCard extends StatelessWidget {
 class _BannerContent extends StatelessWidget {
   final AdModel banner;
   final bool isCompact;
-  final VoidCallback onActionTap;
 
-  const _BannerContent({
-    required this.banner,
-    required this.isCompact,
-    required this.onActionTap,
-  });
+  const _BannerContent({required this.banner, required this.isCompact});
 
   @override
   Widget build(BuildContext context) {
@@ -92,20 +79,12 @@ class _BannerContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _InfoPill(text: banner.badge),
-                _InfoPill(text: banner.placementLabel),
-              ],
-            ),
-            const Spacer(flex: 2),
+            const Spacer(),
             Text(
               title,
               style: TextStyle(
                 color: AppColors.white,
-                fontSize: isCompact ? 21 : 24,
+                fontSize: isCompact ? 20 : 23,
                 fontWeight: FontWeight.w900,
                 height: 1.15,
               ),
@@ -119,126 +98,11 @@ class _BannerContent extends StatelessWidget {
                 color: AppColors.white.withValues(alpha: 0.9),
                 height: 1.32,
               ),
-              maxLines: isCompact ? 4 : 5,
+              maxLines: isCompact ? 3 : 4,
               overflow: TextOverflow.ellipsis,
             ),
             const Spacer(),
-            _AdMetaRow(banner: banner),
-            const SizedBox(height: 12),
-            _ActionButton(
-              label: banner.actionText,
-              color: banner.colors.first,
-              isCompact: isCompact,
-              onPressed: onActionTap,
-            ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AdMetaRow extends StatelessWidget {
-  final AdModel banner;
-
-  const _AdMetaRow({required this.banner});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          banner.icon,
-          color: AppColors.white.withValues(alpha: 0.82),
-          size: 16,
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            banner.dateRange,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.white.withValues(alpha: 0.82),
-              fontWeight: FontWeight.w600,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final String label;
-  final Color color;
-  final bool isCompact;
-  final VoidCallback onPressed;
-
-  const _ActionButton({
-    required this.label,
-    required this.color,
-    required this.isCompact,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: SizedBox(
-        height: 36,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: isCompact ? 112 : 124,
-            maxWidth: isCompact ? 132 : 156,
-          ),
-          child: ElevatedButton(
-            onPressed: onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.white,
-              foregroundColor: color,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: isCompact ? 12 : 13,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoPill extends StatelessWidget {
-  final String text;
-
-  const _InfoPill({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.white.withValues(alpha: 0.16)),
-      ),
-      child: Text(
-        text,
-        style: AppTypography.bodySmall.copyWith(
-          color: AppColors.white,
-          fontWeight: FontWeight.w800,
         ),
       ),
     );

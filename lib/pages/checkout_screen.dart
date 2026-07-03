@@ -256,27 +256,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             backgroundColor: Colors.transparent,
             foregroundColor: context.appText,
           ),
-          body: Stack(
-            children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 112),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildProgressIndicator(),
-                    const SizedBox(height: 8),
-                    _buildSectionHeader('عنوان التوصيل'),
-                    _buildAddressSection(),
-                    _buildSectionHeader('منتجات الطلب'),
-                    _buildOrderItemsPreview(cartState),
-                    _buildSectionHeader('طريقة الدفع'),
-                    _buildPaymentSection(),
-                  ],
-                ),
-              ),
-              _buildBottomBar(cartState),
-            ],
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProgressIndicator(),
+                const SizedBox(height: 8),
+                _buildSectionHeader('عنوان التوصيل'),
+                _buildAddressSection(),
+                _buildSectionHeader('منتجات الطلب'),
+                _buildOrderItemsPreview(cartState),
+                _buildSectionHeader('طريقة الدفع'),
+                _buildPaymentSection(),
+              ],
+            ),
           ),
+          bottomNavigationBar: _buildBottomBar(cartState),
         );
       },
     );
@@ -704,85 +700,80 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildBottomBar(CartState state) {
     final invoice = _invoiceFor(state);
 
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: context.appSurface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: context.appCardShadow(
-            alpha: 0.12,
-            blur: 28,
-            offset: const Offset(0, -10),
-          ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.appSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: context.appCardShadow(
+          alpha: 0.12,
+          blur: 28,
+          offset: const Offset(0, -10),
         ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'الإجمالي',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.grey,
-                      ),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'الإجمالي',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.grey,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${(invoice['total'] ?? 0).toStringAsFixed(2)} ل.س',
-                      style: AppTypography.headlineSmall.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: _isProcessing || state.items.isEmpty
-                      ? null
-                      : _placeOrder,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    elevation: 0,
                   ),
-                  child: _isProcessing
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'تأكيد الطلب',
-                              style: TextStyle(color: AppColors.white),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward, size: 18),
-                          ],
-                        ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${(invoice['total'] ?? 0).toStringAsFixed(2)} ل.س',
+                    style: AppTypography.headlineSmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: _isProcessing || state.items.isEmpty
+                    ? null
+                    : _placeOrder,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  elevation: 0,
+                ),
+                child: _isProcessing
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'تأكيد الطلب',
+                            style: TextStyle(color: AppColors.white),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward, size: 18),
+                        ],
+                      ),
+              ),
+            ),
+          ],
         ),
       ),
     );

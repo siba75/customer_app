@@ -7,7 +7,7 @@ class CustomerNotification {
   final String id;
   final String title;
   final String message;
-  final String time;
+  final DateTime? createdAt;
   final NotificationType type;
   final bool isRead;
   final String? actionText;
@@ -16,22 +16,57 @@ class CustomerNotification {
     required this.id,
     required this.title,
     required this.message,
-    required this.time,
+    required this.createdAt,
     required this.type,
     required this.isRead,
     this.actionText,
   });
+
+  factory CustomerNotification.fromJson(Map<String, dynamic> json) {
+    final rawType = _readText(json, const [
+      'type',
+      'category',
+      'notificationType',
+    ]);
+    final readAt = _readText(json, const ['readAt', 'read_at']);
+    final isReadValue = json['isRead'] ?? json['read'] ?? json['seen'];
+
+    return CustomerNotification(
+      id: _readText(json, const ['id', 'notificationId', '_id']),
+      title: _readText(json, const ['title', 'subject', 'name']),
+      message: _readText(json, const ['message', 'body', 'description']),
+      createdAt: _readDate(json, const ['createdAt', 'created_at', 'date']),
+      type: _typeFrom(rawType, json),
+      isRead: _toBool(isReadValue) || readAt.isNotEmpty,
+      actionText: _optionalText(json, const ['actionText', 'action_text']),
+    );
+  }
 
   CustomerNotification copyWith({bool? isRead}) {
     return CustomerNotification(
       id: id,
       title: title,
       message: message,
-      time: time,
+      createdAt: createdAt,
       type: type,
       isRead: isRead ?? this.isRead,
       actionText: actionText,
     );
+  }
+
+  String get time {
+    if (createdAt == null) return '';
+
+    final now = DateTime.now();
+    final difference = now.difference(createdAt!);
+
+    if (difference.inMinutes < 1) return 'الآن';
+    if (difference.inMinutes < 60) return 'منذ ${difference.inMinutes} دقيقة';
+    if (difference.inHours < 24) return 'منذ ${difference.inHours} ساعة';
+    if (difference.inDays == 1) return 'أمس';
+    if (difference.inDays < 7) return 'منذ ${difference.inDays} أيام';
+
+    return '${createdAt!.day}/${createdAt!.month}/${createdAt!.year}';
   }
 
   IconData get icon {
@@ -59,50 +94,64 @@ class CustomerNotification {
         return AppColors.error;
     }
   }
-}
 
-const List<CustomerNotification> mockNotifications = [
-  CustomerNotification(
-    id: 'NTF-001',
-    title: 'طلبك قيد التجهيز',
-    message: 'تم استلام طلبك SM-2024-003 وسيتم تجهيزه خلال وقت قصير.',
-    time: 'منذ 10 دقائق',
-    type: NotificationType.order,
-    isRead: false,
-    actionText: 'تتبع الطلب',
-  ),
-  CustomerNotification(
-    id: 'NTF-002',
-    title: 'خصم 25% على الفواكه',
-    message: 'استفيدي من العرض اليوم على التفاح والبرتقال الطازج.',
-    time: 'منذ ساعة',
-    type: NotificationType.offer,
-    isRead: false,
-    actionText: 'تسوقي الآن',
-  ),
-  CustomerNotification(
-    id: 'NTF-003',
-    title: 'نقاط ولاء جديدة',
-    message: 'تمت إضافة 120 نقطة إلى حسابك بعد آخر عملية شراء.',
-    time: 'أمس',
-    type: NotificationType.account,
-    isRead: false,
-  ),
-  CustomerNotification(
-    id: 'NTF-004',
-    title: 'لا تنسي سلتك',
-    message: 'منتجاتك المختارة لا تزال في السلة ويمكنك إكمال الطلب الآن.',
-    time: 'قبل يومين',
-    type: NotificationType.reminder,
-    isRead: true,
-    actionText: 'فتح السلة',
-  ),
-  CustomerNotification(
-    id: 'NTF-005',
-    title: 'تم توصيل الطلب',
-    message: 'طلبك SM-2024-001 وصل بنجاح. نتمنى لك تجربة لطيفة.',
-    time: '15 يناير',
-    type: NotificationType.order,
-    isRead: true,
-  ),
-];
+  static NotificationType _typeFrom(String value, Map<String, dynamic> json) {
+    final type = value.toLowerCase();
+    final combinedText =
+        '${_readText(json, const ['title'])} ${_readText(json, const ['message', 'body', 'description'])}'
+            .toLowerCase();
+
+    if (type.contains('order') ||
+        type.contains('طلب') ||
+        combinedText.contains('order') ||
+        combinedText.contains('طلب')) {
+      return NotificationType.order;
+    }
+    if (type.contains('offer') ||
+        type.contains('discount') ||
+        type.contains('عرض') ||
+        combinedText.contains('discount') ||
+        combinedText.contains('خصم') ||
+        combinedText.contains('عرض')) {
+      return NotificationType.offer;
+    }
+    if (type.contains('account') ||
+        type.contains('loyalty') ||
+        type.contains('حساب') ||
+        combinedText.contains('loyalty') ||
+        combinedText.contains('نقاط')) {
+      return NotificationType.account;
+    }
+
+    return NotificationType.reminder;
+  }
+
+  static String _readText(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      final text = value?.toString().trim();
+      if (text != null && text.isNotEmpty && text.toLowerCase() != 'null') {
+        return text;
+      }
+    }
+
+    return '';
+  }
+
+  static String? _optionalText(Map<String, dynamic> json, List<String> keys) {
+    final text = _readText(json, keys);
+    return text.isEmpty ? null : text;
+  }
+
+  static DateTime? _readDate(Map<String, dynamic> json, List<String> keys) {
+    final text = _readText(json, keys);
+    return text.isEmpty ? null : DateTime.tryParse(text)?.toLocal();
+  }
+
+  static bool _toBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    final text = value?.toString().trim().toLowerCase();
+    return text == 'true' || text == '1' || text == 'yes';
+  }
+}

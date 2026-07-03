@@ -3,14 +3,10 @@ import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:flutter/material.dart';
 
-
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
 
-  const CustomBottomNav({
-    super.key,
-    required this.currentIndex,
-  });
+  const CustomBottomNav({super.key, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +15,7 @@ class CustomBottomNav extends StatelessWidget {
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -30,7 +26,9 @@ class CustomBottomNav extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.primaryLight,
-        selectedLabelStyle: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+        selectedLabelStyle: AppTypography.bodyLarge.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
         unselectedLabelStyle: AppTypography.bodyLarge,
         onTap: (index) {
           switch (index) {

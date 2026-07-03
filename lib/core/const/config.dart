@@ -12,6 +12,10 @@ class ApiConfig {
   static const String calculateDiscountEndpoint = '/discount/calculate';
   static const String ordersEndpoint = '/orders';
   static const String customerOrdersEndpoint = '/orders/customer';
+  static const String loyaltyRewardsAvailableEndpoint =
+      '/loyalty-rewards/available';
+  static const String notificationsMeEndpoint = '/notifications/me';
+  static const String notificationsEndpoint = '/notifications';
 
   // static const String jwtTokenKey = 'JWT_TOKEN';
 }

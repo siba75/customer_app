@@ -1,7 +1,7 @@
-import 'package:bloc/bloc.dart';
 import 'package:customer_app/cubit_folder/singup_state.dart';
 import 'package:customer_app/dio/auth_api.dart';
 import 'package:customer_app/model/signup_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 // part 'register_state.dart';
 class RegisterCubit extends Cubit<RegisterState> {

@@ -7,7 +7,6 @@ import 'package:customer_app/cubit_folder/category_cubit.dart';
 import 'package:customer_app/cubit_folder/category_state.dart';
 import 'package:customer_app/cubit_folder/product_cubit.dart';
 import 'package:customer_app/cubit_folder/product_state.dart';
-import 'package:customer_app/model/ad_model.dart';
 import 'package:customer_app/model/category_model.dart';
 import 'package:customer_app/pages/product_detail_screen.dart';
 import 'package:customer_app/widgets/home_widgets/home_categories_section.dart';
@@ -148,20 +147,7 @@ class _AdsCarousel extends StatelessWidget {
       return const _AdsSkeleton();
     }
 
-    return PromoBannerCarousel(
-      banners: state.ads,
-      onActionTap: (ad) => _handleAdTap(context, ad),
-    );
-  }
-
-  void _handleAdTap(BuildContext context, AdModel ad) {
-    final message = ad.linkUrl == null || ad.linkUrl!.isEmpty
-        ? (ad.title.isEmpty ? 'جاري تجهيز الإعلان لك' : ad.title)
-        : 'تم فتح إعلان ${ad.title}';
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.success),
-    );
+    return PromoBannerCarousel(banners: state.ads);
   }
 }
 
@@ -171,40 +157,46 @@ class _AdsSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
-      child: HomeShimmer(
-        child: Container(
-          height: 304,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: context.appSurface,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: context.appSoftBorder),
-            boxShadow: context.appCardShadow(
-              alpha: 0.1,
-              blur: 24,
-              offset: const Offset(0, 10),
-            ),
-          ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  ShimmerBox(width: 86, height: 28),
-                  SizedBox(width: 8),
-                  ShimmerBox(width: 74, height: 28),
-                ],
-              ),
-              Spacer(),
-              ShimmerBox(width: 220, height: 28),
-              SizedBox(height: 12),
-              ShimmerBox(width: double.infinity, height: 16),
-              SizedBox(height: 8),
-              ShimmerBox(width: 250, height: 16),
-              SizedBox(height: 22),
-              ShimmerBox(width: 126, height: 36),
-            ],
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final cardHeight = (constraints.maxWidth * 0.62).clamp(
+                214.0,
+                268.0,
+              );
+
+              return HomeShimmer(
+                child: Container(
+                  height: cardHeight,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: context.appSurface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: context.appSoftBorder),
+                    boxShadow: context.appCardShadow(
+                      alpha: 0.1,
+                      blur: 24,
+                      offset: const Offset(0, 10),
+                    ),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Spacer(),
+                      ShimmerBox(width: 220, height: 28),
+                      SizedBox(height: 12),
+                      ShimmerBox(width: double.infinity, height: 16),
+                      SizedBox(height: 8),
+                      ShimmerBox(width: 250, height: 16),
+                      Spacer(),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

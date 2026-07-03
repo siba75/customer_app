@@ -15,7 +15,12 @@ class OrderFilterChips extends StatelessWidget {
   final List<Map<String, dynamic>> _filters = const [
     {'id': 'all', 'label': 'الكل', 'icon': Icons.list_alt},
     {'id': 'pending', 'label': 'قيد الانتظار', 'icon': Icons.pending_actions},
-    {'id': 'processing', 'label': 'قيد المعالجة', 'icon': Icons.settings},
+    {'id': 'preparing', 'label': 'قيد التحضير', 'icon': Icons.restaurant_menu},
+    {
+      'id': 'out_for_delivery',
+      'label': 'خرج للتوصيل',
+      'icon': Icons.local_shipping_outlined,
+    },
     {'id': 'delivered', 'label': 'تم التوصيل', 'icon': Icons.delivery_dining},
   ];
 
@@ -28,7 +33,7 @@ class OrderFilterChips extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: _filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final filter = _filters[index];
           final isSelected = selectedFilter == filter['id'];

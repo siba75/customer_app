@@ -1,7 +1,7 @@
-import 'package:bloc/bloc.dart';
 import 'package:customer_app/cubit_folder/login_state.dart';
 import 'package:customer_app/dio/auth_api.dart';
 import 'package:customer_app/model/signin_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LoginCubit extends Cubit<LoginState> {
   final AuthApi _api;

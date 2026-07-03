@@ -18,6 +18,7 @@ import 'package:customer_app/dio/discount_api.dart';
 import 'package:customer_app/dio/order_api.dart';
 import 'package:customer_app/dio/product_api.dart';
 import 'package:customer_app/pages/cart_screen.dart';
+import 'package:customer_app/pages/loyalty_rewards_screen.dart';
 import 'package:customer_app/pages/orders_screen.dart';
 import 'package:customer_app/pages/profile_screen.dart';
 import 'package:customer_app/widgets/home_widgets/bottom_nav_bar.dart';
@@ -104,6 +105,7 @@ class _HomeViewState extends State<_HomeView> {
             title: HomeAppBarTitle(
               fullName: profile?.fullName,
               loyaltyPoints: profile?.loyaltyPoints ?? 250,
+              onLoyaltyTap: _openLoyaltyRewards,
             ),
           ),
           body: _currentIndex == 0 ? _buildHomeTab() : _buildOtherScreen(),
@@ -137,6 +139,13 @@ class _HomeViewState extends State<_HomeView> {
           },
         );
       },
+    );
+  }
+
+  void _openLoyaltyRewards() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LoyaltyRewardsScreen()),
     );
   }
 

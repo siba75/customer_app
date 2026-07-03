@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 
 class NotificationCard extends StatelessWidget {
   final CustomerNotification notification;
+  final bool isUpdating;
   final VoidCallback onTap;
 
   const NotificationCard({
     super.key,
     required this.notification,
+    this.isUpdating = false,
     required this.onTap,
   });
 
@@ -44,7 +46,14 @@ class NotificationCard extends StatelessWidget {
             _NotificationIcon(notification: notification),
             const SizedBox(width: 12),
             Expanded(child: _NotificationBody(notification: notification)),
-            if (!notification.isRead) const _UnreadDot(),
+            if (isUpdating)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else if (!notification.isRead)
+              const _UnreadDot(),
           ],
         ),
       ),
