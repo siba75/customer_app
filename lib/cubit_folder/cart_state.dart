@@ -35,7 +35,7 @@ class CartState {
     return discountCalculation?.discountAmount ?? 0;
   }
 
-  double get discount => itemDiscount + invoiceDiscount;
+  double get discount => invoiceDiscount > 0 ? invoiceDiscount : itemDiscount;
 
   String? get discountName {
     final invoiceDiscountName = discountCalculation?.discountName;

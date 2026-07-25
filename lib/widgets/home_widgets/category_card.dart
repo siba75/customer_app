@@ -2,6 +2,7 @@
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:customer_app/widgets/product/authenticated_product_image.dart';
 import 'package:flutter/material.dart';
 
 class CategoryCard extends StatelessWidget {
@@ -18,6 +19,10 @@ class CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = category['image']?.toString();
+    final hasImage =
+        imageUrl != null && imageUrl.isNotEmpty && imageUrl != 'null';
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
@@ -35,11 +40,24 @@ class CategoryCard extends StatelessWidget {
                 offset: const Offset(0, 8),
               ),
             ),
-            child: Icon(
-              _iconData(category['icon']),
-              size: 32,
-              color: isSelected ? AppColors.white : AppColors.primary,
-            ),
+            clipBehavior: Clip.antiAlias,
+            child: hasImage
+                ? AuthenticatedProductImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                    placeholderBuilder: (_) => _FallbackIcon(
+                      icon: _iconData(category['icon']),
+                      isSelected: isSelected,
+                    ),
+                    errorBuilder: (_) => _FallbackIcon(
+                      icon: _iconData(category['icon']),
+                      isSelected: isSelected,
+                    ),
+                  )
+                : _FallbackIcon(
+                    icon: _iconData(category['icon']),
+                    isSelected: isSelected,
+                  ),
           ),
           const SizedBox(height: 8),
           SizedBox(
@@ -101,5 +119,21 @@ class CategoryCard extends StatelessWidget {
       default:
         return Icons.category_outlined;
     }
+  }
+}
+
+class _FallbackIcon extends StatelessWidget {
+  final IconData icon;
+  final bool isSelected;
+
+  const _FallbackIcon({required this.icon, required this.isSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      icon,
+      size: 32,
+      color: isSelected ? AppColors.white : AppColors.primary,
+    );
   }
 }

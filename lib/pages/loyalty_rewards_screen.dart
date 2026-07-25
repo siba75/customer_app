@@ -4,6 +4,7 @@ import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:customer_app/cubit_folder/loyalty_rewards_cubit.dart';
 import 'package:customer_app/cubit_folder/loyalty_rewards_state.dart';
 import 'package:customer_app/dio/loyalty_rewards_api.dart';
+import 'package:customer_app/model/loyalty_policy_model.dart';
 import 'package:customer_app/model/loyalty_reward_model.dart';
 import 'package:customer_app/widgets/loyalty_widgets/loyalty_rewards_loading_skeleton.dart';
 import 'package:customer_app/widgets/snackbar.dart';
@@ -55,6 +56,31 @@ class _LoyaltyRewardsView extends StatelessWidget {
       ),
       body: BlocConsumer<LoyaltyRewardsCubit, LoyaltyRewardsState>(
         listener: (context, state) {
+          if (state is LoyaltyRewardsSuccess) {
+            final successMessage = state.successMessage;
+            final errorMessage = state.errorMessage;
+
+            if (successMessage != null) {
+              showCustomSnackBar(
+                context,
+                successMessage,
+                backgroundColor: AppColors.success,
+                icon: Icons.check_circle_outline,
+              );
+            }
+
+            if (errorMessage != null) {
+              showCustomSnackBar(
+                context,
+                errorMessage,
+                backgroundColor: AppColors.error,
+                icon: Icons.error_outline,
+              );
+            }
+
+            return;
+          }
+
           if (state is! LoyaltyRewardsError) return;
 
           showCustomSnackBar(
@@ -79,6 +105,12 @@ class _LoyaltyRewardsView extends StatelessWidget {
           final rewards = state is LoyaltyRewardsSuccess
               ? state.rewards
               : const <LoyaltyRewardModel>[];
+          final policy = state is LoyaltyRewardsSuccess
+              ? state.policy
+              : const LoyaltyPolicyModel.empty();
+          final redeemingOfferId = state is LoyaltyRewardsSuccess
+              ? state.redeemingOfferId
+              : null;
 
           if (rewards.isEmpty) {
             return RefreshIndicator(
@@ -87,7 +119,12 @@ class _LoyaltyRewardsView extends StatelessWidget {
               onRefresh: context.read<LoyaltyRewardsCubit>().loadRewards,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                children: const [_EmptyRewardsView()],
+                padding: const EdgeInsets.all(20),
+                children: [
+                  _LoyaltyPolicyHeader(policy: policy),
+                  const SizedBox(height: 18),
+                  const _EmptyRewardsView(),
+                ],
               ),
             );
           }
@@ -96,14 +133,25 @@ class _LoyaltyRewardsView extends StatelessWidget {
             color: AppColors.primary,
             backgroundColor: context.appSurface,
             onRefresh: context.read<LoyaltyRewardsCubit>().loadRewards,
-            child: ListView.separated(
+            child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(20),
-              itemCount: rewards.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 14),
-              itemBuilder: (context, index) {
-                return _RewardCard(reward: rewards[index]);
-              },
+              children: [
+                _LoyaltyPolicyHeader(policy: policy),
+                const SizedBox(height: 18),
+                ...rewards.map(
+                  (reward) => Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: _RewardCard(
+                      reward: reward,
+                      isRedeeming: redeemingOfferId == reward.id,
+                      onRedeem: () => context
+                          .read<LoyaltyRewardsCubit>()
+                          .redeemReward(reward),
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -112,10 +160,153 @@ class _LoyaltyRewardsView extends StatelessWidget {
   }
 }
 
+class _LoyaltyPolicyHeader extends StatelessWidget {
+  final LoyaltyPolicyModel policy;
+
+  const _LoyaltyPolicyHeader({required this.policy});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [AppColors.primary, AppColors.primaryDark],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: context.appCardShadow(
+          alpha: 0.16,
+          blur: 30,
+          offset: const Offset(0, 14),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.white.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.stars_rounded,
+                  color: AppColors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'نقاط الولاء',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'استخدم نقاطك كخصم عند إتمام الطلب',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.white.withValues(alpha: 0.82),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _PolicyTile(
+                  label: 'كسب النقاط',
+                  value: policy.pointsPerCurrency <= 0
+                      ? 'غير محدد'
+                      : '${_formatNumber(policy.pointsPerCurrency)} نقطة / ل.س',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _PolicyTile(
+                  label: 'قيمة النقطة',
+                  value: policy.currencyPerPoint <= 0
+                      ? 'غير محدد'
+                      : '${_formatNumber(policy.currencyPerPoint)} ل.س',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatNumber(double value) {
+    if (value == value.roundToDouble()) return value.toInt().toString();
+    return value.toStringAsFixed(2);
+  }
+}
+
+class _PolicyTile extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _PolicyTile({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.white.withValues(alpha: 0.78),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.titleSmall.copyWith(
+              color: AppColors.white,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RewardCard extends StatelessWidget {
   final LoyaltyRewardModel reward;
+  final bool isRedeeming;
+  final VoidCallback onRedeem;
 
-  const _RewardCard({required this.reward});
+  const _RewardCard({
+    required this.reward,
+    required this.isRedeeming,
+    required this.onRedeem,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -146,15 +337,26 @@ class _RewardCard extends StatelessWidget {
               _RewardIcon(canRedeem: canRedeem),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  reward.rewardDescription.isEmpty
-                      ? 'مكافأة ولاء'
-                      : reward.rewardDescription,
-                  style: AppTypography.titleMedium.copyWith(
-                    color: context.appText,
-                    fontWeight: FontWeight.w900,
-                    height: 1.25,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      reward.displayTitle,
+                      style: AppTypography.titleMedium.copyWith(
+                        color: context.appText,
+                        fontWeight: FontWeight.w900,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      reward.displayDescription,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: context.appMutedText,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 8),
@@ -168,7 +370,7 @@ class _RewardCard extends StatelessWidget {
                 child: _RewardInfoTile(
                   icon: Icons.stars_outlined,
                   label: 'النقاط المطلوبة',
-                  value: '${reward.pointsThreshold}',
+                  value: '${reward.pointsCost}',
                   color: AppColors.secondary,
                 ),
               ),
@@ -177,14 +379,56 @@ class _RewardCard extends StatelessWidget {
                 child: _RewardInfoTile(
                   icon: Icons.local_offer_outlined,
                   label: 'قيمة الخصم',
-                  value: reward.discountValue,
+                  value: reward.displayDiscountValue,
                   color: AppColors.primary,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          _ActiveStatus(isActive: reward.isActive),
+          Row(
+            children: [
+              Expanded(child: _ActiveStatus(isActive: reward.isActive)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _RewardInfoTile(
+                  icon: Icons.schedule_outlined,
+                  label: 'مدة الصلاحية',
+                  value: reward.displayValidity,
+                  color: AppColors.success,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              onPressed: canRedeem && !isRedeeming ? onRedeem : null,
+              icon: isRedeeming
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.white,
+                      ),
+                    )
+                  : const Icon(Icons.redeem_outlined, color: AppColors.white),
+              label: Text(
+                isRedeeming
+                    ? 'جاري الاستبدال...'
+                    : canRedeem
+                    ? 'استبدال المكافأة'
+                    : 'نقاطك غير كافية',
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

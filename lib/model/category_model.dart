@@ -1,9 +1,12 @@
+import 'package:customer_app/core/const/config.dart';
 import 'package:customer_app/model/product_model.dart';
 
 class CategoryModel {
   final int id;
   final String name;
   final String description;
+  final String? imageUrl;
+  final String? storedFileId;
   final int productsCount;
   final List<ProductModel> products;
 
@@ -11,6 +14,8 @@ class CategoryModel {
     required this.id,
     required this.name,
     required this.description,
+    this.imageUrl,
+    this.storedFileId,
     required this.productsCount,
     this.products = const [],
   });
@@ -30,6 +35,8 @@ class CategoryModel {
       id: _toInt(json['id']),
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
+      imageUrl: _absoluteImageUrl(_nullableString(json['imageUrl'])),
+      storedFileId: _nullableString(json['storedFileId']),
       productsCount: _toInt(count['products']),
       products: products,
     );
@@ -40,6 +47,9 @@ class CategoryModel {
       'id': id.toString(),
       'name': name,
       'description': description,
+      'image': imageUrl,
+      'has_image': imageUrl != null && imageUrl!.isNotEmpty,
+      'stored_file_id': storedFileId,
       'products_count': productsCount,
       'icon': iconName,
     };
@@ -163,6 +173,21 @@ class CategoryModel {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static String? _nullableString(dynamic value) {
+    final text = value?.toString().trim();
+    if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
+      return null;
+    }
+    return text;
+  }
+
+  static String? _absoluteImageUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return '${ApiConfig.baseUrl}$url';
+    return '${ApiConfig.baseUrl}/$url';
   }
 }
 

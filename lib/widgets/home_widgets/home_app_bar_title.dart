@@ -1,8 +1,11 @@
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:customer_app/cubit_folder/notifications_cubit.dart';
+import 'package:customer_app/cubit_folder/notifications_state.dart';
 import 'package:customer_app/pages/notifications_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomeAppBarTitle extends StatelessWidget {
   final String? fullName;
@@ -124,41 +127,64 @@ class _NotificationButton extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
+        final notificationsCubit = context.read<NotificationsCubit>();
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+          MaterialPageRoute(
+            builder: (_) => NotificationsScreen(cubit: notificationsCubit),
+          ),
         );
       },
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.primarySoft,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.notifications_none,
-              color: AppColors.primary,
-              size: 22,
-            ),
-          ),
-          Positioned(
-            top: -2,
-            right: -2,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: AppColors.error,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.white, width: 1.5),
+      child: BlocBuilder<NotificationsCubit, NotificationsState>(
+        buildWhen: (previous, current) =>
+            previous.unreadCount != current.unreadCount,
+        builder: (context, state) {
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.notifications_none,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
               ),
-            ),
-          ),
-        ],
+              if (state.unreadCount > 0)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(color: AppColors.white, width: 1.5),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      state.unreadCount > 9 ? '9+' : '${state.unreadCount}',
+                      style: const TextStyle(
+                        color: AppColors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

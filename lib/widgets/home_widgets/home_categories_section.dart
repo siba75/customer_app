@@ -1,4 +1,5 @@
 import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/core/helpers/app_error_messages.dart';
 import 'package:customer_app/cubit_folder/category_state.dart';
 import 'package:customer_app/cubit_folder/product_state.dart';
 import 'package:customer_app/model/category_model.dart';
@@ -69,7 +70,10 @@ class _CategoriesList extends StatelessWidget {
     if (categoryState.categories.isEmpty) {
       return HomeMessageCard(
         icon: Icons.category_outlined,
-        title: categoryState.errorMessage ?? 'لا توجد تصنيفات حالياً',
+        title: AppErrorMessages.friendly(
+          categoryState.errorMessage,
+          fallback: 'لا توجد تصنيفات حالياً',
+        ),
       );
     }
 

@@ -1,4 +1,5 @@
 import 'package:customer_app/cubit_folder/product_state.dart';
+import 'package:customer_app/core/helpers/app_error_messages.dart';
 import 'package:customer_app/dio/category_api.dart';
 import 'package:customer_app/dio/discount_api.dart';
 import 'package:customer_app/dio/product_api.dart';
@@ -46,10 +47,14 @@ class ProductCubit extends Cubit<ProductState> {
         ),
       );
     } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
       emit(
         state.copyWith(
           isLoading: false,
-          errorMessage: e.toString().replaceFirst('Exception: ', ''),
+          errorMessage: AppErrorMessages.friendly(
+            message,
+            fallback: 'تعذر تحميل المنتجات',
+          ),
         ),
       );
     }
@@ -77,10 +82,14 @@ class ProductCubit extends Cubit<ProductState> {
         ),
       );
     } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
       emit(
         state.copyWith(
           isLoading: false,
-          errorMessage: e.toString().replaceFirst('Exception: ', ''),
+          errorMessage: AppErrorMessages.friendly(
+            message,
+            fallback: 'تعذر تحميل منتجات التصنيف',
+          ),
         ),
       );
     }

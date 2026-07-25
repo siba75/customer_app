@@ -10,10 +10,11 @@ Future<void> main() async {
   await ThemeController.loadSavedTheme();
 
   runApp(
-    DevicePreview(
-      enabled: true, // فعّل المعاينة
-      builder: (context) => const MyApp(),
-    ),
+   // DevicePreview(
+      //enabled: true, // فعّل المعاينة
+     // builder: (context) => 
+      const MyApp(),
+    //),
   );
 }
 

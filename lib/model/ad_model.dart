@@ -1,4 +1,5 @@
 import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/core/const/config.dart';
 import 'package:flutter/material.dart';
 
 class AdModel {
@@ -29,7 +30,7 @@ class AdModel {
       id: _toInt(json['id']),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      imageUrl: _nullableString(json['imageUrl']),
+      imageUrl: _absoluteImageUrl(_nullableString(json['imageUrl'])),
       linkUrl: _nullableString(json['linkUrl']),
       placement: json['placement']?.toString().toUpperCase() ?? '',
       isActive: json['isActive'] == true,
@@ -39,6 +40,16 @@ class AdModel {
   }
 
   bool get isHomePlacement => placement == 'HOME';
+
+  bool get isCurrentlyVisible {
+    if (!isActive) return false;
+
+    final now = DateTime.now().toUtc();
+    if (startDate != null && now.isBefore(startDate!.toUtc())) return false;
+    if (endDate != null && now.isAfter(endDate!.toUtc())) return false;
+
+    return true;
+  }
 
   bool get hasImage => imageUrl != null && imageUrl!.isNotEmpty;
 
@@ -113,7 +124,16 @@ class AdModel {
 
   static String? _nullableString(dynamic value) {
     final text = value?.toString().trim();
-    if (text == null || text.isEmpty) return null;
+    if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
+      return null;
+    }
     return text;
+  }
+
+  static String? _absoluteImageUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return '${ApiConfig.baseUrl}$url';
+    return '${ApiConfig.baseUrl}/$url';
   }
 }

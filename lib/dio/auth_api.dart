@@ -1,4 +1,5 @@
 import 'package:customer_app/core/const/config.dart';
+import 'package:customer_app/core/helpers/app_error_messages.dart';
 import 'package:customer_app/model/signin_model.dart';
 import 'package:customer_app/model/signup_model.dart';
 import 'package:customer_app/model/verify_otp_model.dart';
@@ -8,7 +9,16 @@ class AuthApi {
   final Dio _dio;
 
   AuthApi([Dio? dio])
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: ApiConfig.baseUrl,
+              connectTimeout: const Duration(seconds: 12),
+              receiveTimeout: const Duration(seconds: 20),
+              sendTimeout: const Duration(seconds: 12),
+            ),
+          );
 
   Future<Map<String, dynamic>> signup(SignupModel model) async {
     try {
@@ -38,15 +48,26 @@ class AuthApi {
     } on DioException catch (e) {
       final message = _readErrorMessage(e);
 
+      if (_isConnectionIssue(e)) {
+        throw Exception(_connectionMessage);
+      }
+
       if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
-        throw Exception(message ?? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+        throw Exception(
+          message ?? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+        );
       }
 
       if (e.response?.statusCode == 403) {
         throw Exception(message ?? 'يرجى تأكيد الحساب قبل تسجيل الدخول.');
       }
 
-      throw Exception(message ?? 'تعذر تسجيل الدخول، حاول مرة أخرى.');
+      throw Exception(
+        AppErrorMessages.friendly(
+          message,
+          fallback: 'تعذر تسجيل الدخول، حاول مرة أخرى.',
+        ),
+      );
     }
   }
 
@@ -118,5 +139,21 @@ class AuthApi {
     }
 
     return data?.toString();
+  }
+
+  bool _isConnectionIssue(DioException error) {
+    return error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.connectionError ||
+        error.response == null;
+  }
+
+  String get _connectionMessage {
+    if (ApiConfig.isLocalhost) {
+      return 'التطبيق لا يستطيع الوصول للسيرفر. على الموبايل لا تستخدم localhost، شغل التطبيق مع API_BASE_URL بعنوان IP الجهاز أو فعّل adb reverse.';
+    }
+
+    return 'تعذر الاتصال بالسيرفر. تأكد أن السيرفر يعمل وأن الموبايل على نفس الشبكة.';
   }
 }

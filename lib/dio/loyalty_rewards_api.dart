@@ -1,5 +1,6 @@
 import 'package:customer_app/core/const/config.dart';
 import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/model/loyalty_policy_model.dart';
 import 'package:customer_app/model/loyalty_reward_model.dart';
 import 'package:dio/dio.dart';
 
@@ -19,6 +20,33 @@ class LoyaltyRewardsApi {
       return _readRewardsList(response.data);
     } on DioException catch (e) {
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل مكافآت الولاء.');
+    }
+  }
+
+  Future<LoyaltyPolicyModel> getLoyaltyPolicy() async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.loyaltyRewardsEndpoint}/policy',
+        options: await _authOptions(),
+      );
+
+      return LoyaltyPolicyModel.fromJson(_readMap(response.data));
+    } on DioException catch (e) {
+      throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل سياسة نقاط الولاء.');
+    }
+  }
+
+  Future<LoyaltyRedemptionModel> redeemReward(String offerId) async {
+    try {
+      final response = await _dio.post(
+        '${ApiConfig.loyaltyRewardsEndpoint}/redeem',
+        data: {'offerId': offerId},
+        options: await _authOptions(),
+      );
+
+      return LoyaltyRedemptionModel.fromJson(_readMap(response.data));
+    } on DioException catch (e) {
+      throw Exception(_readErrorMessage(e) ?? 'تعذر استبدال المكافأة.');
     }
   }
 
@@ -48,6 +76,13 @@ class LoyaltyRewardsApi {
   Map<String, dynamic> _asMap(dynamic data) {
     if (data is Map<String, dynamic>) return data;
     throw Exception('صيغة بيانات مكافآت الولاء غير صحيحة.');
+  }
+
+  Map<String, dynamic> _readMap(dynamic data) {
+    final response = _asMap(data);
+    final nested = response['data'];
+    if (nested is Map<String, dynamic>) return nested;
+    return response;
   }
 
   String? _readErrorMessage(DioException error) {

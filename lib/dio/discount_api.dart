@@ -59,6 +59,35 @@ class DiscountApi {
     }
   }
 
+  Future<DiscountCalculationModel?> getBestDiscount({
+    required double subtotal,
+    int? productId,
+    int? categoryId,
+  }) async {
+    if (subtotal <= 0) return null;
+
+    try {
+      final data = <String, dynamic>{'subtotal': subtotal};
+      if (productId != null) data['productId'] = productId;
+      if (categoryId != null) data['categoryId'] = categoryId;
+
+      final response = await _dio.post(
+        ApiConfig.bestDiscountEndpoint,
+        data: data,
+        options: await _authOptions(),
+      );
+
+      final calculation = DiscountCalculationModel.fromJson(
+        _asMap(response.data),
+      );
+
+      return calculation.discountId <= 0 ? null : calculation;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      throw Exception(_readErrorMessage(e) ?? 'تعذر حساب أفضل خصم.');
+    }
+  }
+
   Future<Options> _authOptions() async {
     final token = await SecureStorage.read('auth_token');
 

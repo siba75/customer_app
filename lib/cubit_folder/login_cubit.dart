@@ -1,4 +1,5 @@
 import 'package:customer_app/cubit_folder/login_state.dart';
+import 'package:customer_app/core/helpers/app_error_messages.dart';
 import 'package:customer_app/dio/auth_api.dart';
 import 'package:customer_app/model/signin_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,7 +29,15 @@ class LoginCubit extends Cubit<LoginState> {
         ),
       );
     } catch (e) {
-      emit(LoginError(e.toString().replaceFirst('Exception: ', '')));
+      final message = e.toString().replaceFirst('Exception: ', '');
+      emit(
+        LoginError(
+          AppErrorMessages.friendly(
+            message,
+            fallback: 'تعذر تسجيل الدخول، حاول مرة أخرى.',
+          ),
+        ),
+      );
     }
   }
 }

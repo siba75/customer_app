@@ -180,12 +180,13 @@ class ProductModel {
 
   bool _discountApplies(DiscountModel discount) {
     if (!discount.isActive) return false;
-    if (discount.isGlobalScope) return true;
 
     if (discount.isProductScope) {
-      final discountName = _normalize(discount.name);
-      final productName = _normalize(name);
-      return discountName.contains(productName);
+      return discount.productId == id;
+    }
+
+    if (discount.isCategoryScope) {
+      return categoryId != null && discount.categoryId == categoryId;
     }
 
     return false;
@@ -205,9 +206,5 @@ class ProductModel {
 
   double _roundMoney(double value) {
     return (value * 100).roundToDouble() / 100;
-  }
-
-  String _normalize(String value) {
-    return value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
   }
 }

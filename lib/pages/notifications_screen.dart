@@ -15,10 +15,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({super.key});
+  final NotificationsCubit? cubit;
+
+  const NotificationsScreen({super.key, this.cubit});
 
   @override
   Widget build(BuildContext context) {
+    final existingCubit = cubit;
+
+    if (existingCubit != null) {
+      return BlocProvider.value(
+        value: existingCubit,
+        child: const _NotificationsView(),
+      );
+    }
+
     return BlocProvider(
       create: (_) =>
           NotificationsCubit(NotificationsApi())..loadNotifications(),
@@ -36,6 +47,29 @@ class _NotificationsView extends StatefulWidget {
 
 class _NotificationsViewState extends State<_NotificationsView> {
   String _selectedFilter = 'all';
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final position = _scrollController.position;
+    if (position.pixels < position.maxScrollExtent - 220) return;
+
+    context.read<NotificationsCubit>().loadMore();
+  }
 
   List<CustomerNotification> _filteredNotifications(
     List<CustomerNotification> notifications,
@@ -45,17 +79,9 @@ class _NotificationsViewState extends State<_NotificationsView> {
         return notifications
             .where((notification) => !notification.isRead)
             .toList();
-      case 'orders':
+      case 'read':
         return notifications
-            .where(
-              (notification) => notification.type == NotificationType.order,
-            )
-            .toList();
-      case 'offers':
-        return notifications
-            .where(
-              (notification) => notification.type == NotificationType.offer,
-            )
+            .where((notification) => notification.isRead)
             .toList();
       default:
         return notifications;
@@ -119,13 +145,15 @@ class _NotificationsViewState extends State<_NotificationsView> {
           return RefreshIndicator(
             color: AppColors.primary,
             backgroundColor: context.appSurface,
-            onRefresh: context.read<NotificationsCubit>().loadNotifications,
+            onRefresh: () =>
+                context.read<NotificationsCubit>().loadNotifications(),
             child: CustomScrollView(
+              controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(
                   child: NotificationSummaryHeader(
-                    totalCount: state.notifications.length,
+                    totalCount: state.total,
                     unreadCount: state.unreadCount,
                     onMarkAllRead: context
                         .read<NotificationsCubit>()
@@ -166,6 +194,8 @@ class _NotificationsViewState extends State<_NotificationsView> {
                       },
                     ),
                   ),
+                if (state.isLoadingMore)
+                  const SliverToBoxAdapter(child: _LoadMoreIndicator()),
               ],
             ),
           );
@@ -178,10 +208,8 @@ class _NotificationsViewState extends State<_NotificationsView> {
     switch (_selectedFilter) {
       case 'unread':
         return 'لا توجد إشعارات جديدة';
-      case 'orders':
-        return 'لا توجد إشعارات طلبات';
-      case 'offers':
-        return 'لا توجد عروض حالياً';
+      case 'read':
+        return 'لا توجد إشعارات مقروءة';
       default:
         return 'لا توجد إشعارات';
     }
@@ -191,13 +219,29 @@ class _NotificationsViewState extends State<_NotificationsView> {
     switch (_selectedFilter) {
       case 'unread':
         return 'كل شيء مقروء ومرتب لديك.';
-      case 'orders':
-        return 'سنخبرك هنا بكل تحديثات الطلبات القادمة.';
-      case 'offers':
-        return 'العروض والخصومات الجديدة ستظهر هنا.';
+      case 'read':
+        return 'الإشعارات التي تقرئينها ستظهر هنا.';
       default:
         return '...';
     }
+  }
+}
+
+class _LoadMoreIndicator extends StatelessWidget {
+  const _LoadMoreIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
+      child: Center(
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+    );
   }
 }
 

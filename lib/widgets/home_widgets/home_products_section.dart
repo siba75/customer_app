@@ -1,4 +1,5 @@
 import 'package:customer_app/core/theem/app_typography.dart';
+import 'package:customer_app/core/helpers/app_error_messages.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:customer_app/cubit_folder/product_state.dart';
 import 'package:customer_app/widgets/home_widgets/home_message_card.dart';
@@ -67,11 +68,12 @@ class HomeProductsSection extends StatelessWidget {
         SliverToBoxAdapter(
           child: HomeMessageCard(
             icon: Icons.inventory_2_outlined,
-            title:
-                state.errorMessage ??
-                (query.isEmpty
-                    ? 'لا توجد منتجات ضمن هذا التصنيف'
-                    : 'لا توجد نتائج مطابقة للبحث'),
+            title: AppErrorMessages.friendly(
+              state.errorMessage,
+              fallback: query.isEmpty
+                  ? 'لا توجد منتجات ضمن هذا التصنيف'
+                  : 'لا توجد نتائج مطابقة للبحث',
+            ),
           ),
         ),
       ];

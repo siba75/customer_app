@@ -33,14 +33,9 @@ class NotificationFilterTabs extends StatelessWidget {
       icon: Icons.mark_email_unread_outlined,
     ),
     NotificationFilter(
-      key: 'orders',
-      label: 'الطلبات',
-      icon: Icons.receipt_long_outlined,
-    ),
-    NotificationFilter(
-      key: 'offers',
-      label: 'العروض',
-      icon: Icons.local_offer_outlined,
+      key: 'read',
+      label: 'مقروء',
+      icon: Icons.mark_email_read_outlined,
     ),
   ];
 

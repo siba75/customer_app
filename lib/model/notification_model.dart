@@ -3,6 +3,74 @@ import 'package:flutter/material.dart';
 
 enum NotificationType { order, offer, account, reminder }
 
+class NotificationsPage {
+  final List<CustomerNotification> notifications;
+  final int total;
+  final int limit;
+  final int offset;
+  final bool isFinalPage;
+
+  const NotificationsPage({
+    required this.notifications,
+    required this.total,
+    required this.limit,
+    required this.offset,
+    required this.isFinalPage,
+  });
+
+  factory NotificationsPage.fromJson(dynamic data) {
+    if (data is List) {
+      return NotificationsPage(
+        notifications: data
+            .whereType<Map<String, dynamic>>()
+            .map(CustomerNotification.fromJson)
+            .toList(),
+        total: data.length,
+        limit: data.length,
+        offset: 0,
+        isFinalPage: true,
+      );
+    }
+
+    if (data is! Map<String, dynamic>) {
+      throw Exception('صيغة بيانات الإشعارات غير صحيحة.');
+    }
+
+    final notificationsData = _readList(data);
+    final notifications = notificationsData
+        .whereType<Map<String, dynamic>>()
+        .map(CustomerNotification.fromJson)
+        .toList();
+
+    return NotificationsPage(
+      notifications: notifications,
+      total: _readInt(data['total']) ?? notifications.length,
+      limit: _readInt(data['limit']) ?? notifications.length,
+      offset: _readInt(data['offset']) ?? 0,
+      isFinalPage:
+          CustomerNotification._toBool(data['isFinalPage']) ||
+          CustomerNotification._toBool(data['is_final_page']) ||
+          notifications.length <
+              (_readInt(data['limit']) ?? notifications.length),
+    );
+  }
+
+  static List<dynamic> _readList(Map<String, dynamic> data) {
+    for (final key in ['data', 'notifications', 'items', 'results']) {
+      final value = data[key];
+      if (value is List) return value;
+    }
+
+    throw Exception('صيغة بيانات الإشعارات غير صحيحة.');
+  }
+
+  static int? _readInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
+  }
+}
+
 class CustomerNotification {
   final String id;
   final String title;
@@ -23,23 +91,66 @@ class CustomerNotification {
   });
 
   factory CustomerNotification.fromJson(Map<String, dynamic> json) {
-    final rawType = _readText(json, const [
+    final source = _notificationSource(json);
+    final rawType = _readText(source, const [
       'type',
       'category',
       'notificationType',
+      'notification_type',
     ]);
-    final readAt = _readText(json, const ['readAt', 'read_at']);
-    final isReadValue = json['isRead'] ?? json['read'] ?? json['seen'];
+    final readAt = _readText(source, const ['readAt', 'read_at']);
+    final isReadValue =
+        json['isRead'] ??
+        json['read'] ??
+        json['seen'] ??
+        json['is_read'] ??
+        json['readStatus'];
 
     return CustomerNotification(
-      id: _readText(json, const ['id', 'notificationId', '_id']),
-      title: _readText(json, const ['title', 'subject', 'name']),
-      message: _readText(json, const ['message', 'body', 'description']),
-      createdAt: _readDate(json, const ['createdAt', 'created_at', 'date']),
-      type: _typeFrom(rawType, json),
+      id: _readText(source, const [
+        'id',
+        'notificationId',
+        'notification_id',
+        '_id',
+      ]),
+      title: _readText(source, const [
+        'title',
+        'subject',
+        'name',
+        'notificationTitle',
+        'notification_title',
+      ], fallback: 'إشعار جديد'),
+      message: _readText(source, const [
+        'message',
+        'body',
+        'description',
+        'content',
+        'notificationBody',
+        'notification_body',
+        'text',
+      ], fallback: 'لديك تحديث جديد في حسابك.'),
+      createdAt:
+          _readDate(json, const ['createdAt', 'created_at', 'date']) ??
+          _readDate(source, const ['createdAt', 'created_at', 'date']),
+      type: _typeFrom(rawType, source),
       isRead: _toBool(isReadValue) || readAt.isNotEmpty,
-      actionText: _optionalText(json, const ['actionText', 'action_text']),
+      actionText: _optionalText(source, const [
+        'actionText',
+        'action_text',
+        'action',
+      ]),
     );
+  }
+
+  static Map<String, dynamic> _notificationSource(Map<String, dynamic> json) {
+    for (final key in ['notification', 'data', 'payload']) {
+      final value = json[key];
+      if (value is Map<String, dynamic>) {
+        return {...json, ...value};
+      }
+    }
+
+    return json;
   }
 
   CustomerNotification copyWith({bool? isRead}) {
@@ -126,7 +237,11 @@ class CustomerNotification {
     return NotificationType.reminder;
   }
 
-  static String _readText(Map<String, dynamic> json, List<String> keys) {
+  static String _readText(
+    Map<String, dynamic> json,
+    List<String> keys, {
+    String fallback = '',
+  }) {
     for (final key in keys) {
       final value = json[key];
       final text = value?.toString().trim();
@@ -135,7 +250,7 @@ class CustomerNotification {
       }
     }
 
-    return '';
+    return fallback;
   }
 
   static String? _optionalText(Map<String, dynamic> json, List<String> keys) {

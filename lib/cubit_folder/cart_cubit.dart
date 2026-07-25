@@ -102,21 +102,7 @@ class CartCubit extends Cubit<CartState> {
     final subtotal = state.subtotal;
     final requestId = ++_discountRequestId;
 
-    if (state.itemDiscount > 0) {
-      emit(
-        state.copyWith(
-          isCalculatingDiscount: false,
-          clearDiscountCalculation: true,
-        ),
-      );
-      return;
-    }
-
-    final discounts = state.activeDiscounts
-        .where((discount) => discount.isGlobalScope)
-        .toList();
-
-    if (subtotal <= 0 || discounts.isEmpty) {
+    if (subtotal <= 0) {
       emit(
         state.copyWith(
           isCalculatingDiscount: false,
@@ -129,11 +115,41 @@ class CartCubit extends Cubit<CartState> {
     emit(state.copyWith(isCalculatingDiscount: true));
 
     DiscountCalculationModel? bestCalculation;
+    try {
+      bestCalculation = await _discountApi.getBestDiscount(subtotal: subtotal);
+    } catch (_) {
+      bestCalculation = await _calculateBestDiscountLocally(subtotal);
+    }
+
+    if (requestId != _discountRequestId) return;
+
+    final shouldUseInvoiceDiscount =
+        bestCalculation != null &&
+        bestCalculation.discountAmount > state.itemDiscount;
+
+    emit(
+      state.copyWith(
+        discountCalculation: shouldUseInvoiceDiscount ? bestCalculation : null,
+        isCalculatingDiscount: false,
+        clearDiscountCalculation: !shouldUseInvoiceDiscount,
+      ),
+    );
+  }
+
+  Future<DiscountCalculationModel?> _calculateBestDiscountLocally(
+    double subtotal,
+  ) async {
+    final discounts = state.activeDiscounts
+        .where((discount) => discount.isGlobalScope || discount.isCustomerScope)
+        .toList();
+
+    DiscountCalculationModel? bestCalculation;
     for (final discount in discounts) {
       try {
         final calculation = await _discountApi.calculateDiscount(
           discountId: discount.id,
           subtotal: subtotal,
+          customerId: discount.customerId,
         );
 
         if (bestCalculation == null ||
@@ -145,13 +161,7 @@ class CartCubit extends Cubit<CartState> {
       }
     }
 
-    if (requestId != _discountRequestId) return;
-    emit(
-      state.copyWith(
-        discountCalculation: bestCalculation,
-        isCalculatingDiscount: false,
-      ),
-    );
+    return bestCalculation;
   }
 
   int _clampQuantity(int quantity, int? maxQuantity) {

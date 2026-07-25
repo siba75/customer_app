@@ -9,14 +9,18 @@ class NotificationsApi {
   NotificationsApi([Dio? dio])
     : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
-  Future<List<CustomerNotification>> getMyNotifications() async {
+  Future<NotificationsPage> getMyNotifications({
+    int limit = 10,
+    int offset = 0,
+  }) async {
     try {
       final response = await _dio.get(
         ApiConfig.notificationsMeEndpoint,
+        queryParameters: {'limit': limit, 'offset': offset},
         options: await _authOptions(),
       );
 
-      return _readNotificationsList(response.data);
+      return NotificationsPage.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل الإشعارات.');
     }
@@ -56,19 +60,6 @@ class NotificationsApi {
     return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
-  List<CustomerNotification> _readNotificationsList(dynamic data) {
-    final notifications = data is List ? data : _asMap(data)['data'];
-
-    if (notifications is List) {
-      return notifications
-          .whereType<Map<String, dynamic>>()
-          .map(CustomerNotification.fromJson)
-          .toList();
-    }
-
-    throw Exception('صيغة بيانات الإشعارات غير صحيحة.');
-  }
-
   CustomerNotification? _readNotification(dynamic data) {
     if (data is Map<String, dynamic>) {
       final notification = data['data'];
@@ -80,11 +71,6 @@ class NotificationsApi {
     }
 
     return null;
-  }
-
-  Map<String, dynamic> _asMap(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    throw Exception('صيغة بيانات الإشعارات غير صحيحة.');
   }
 
   String? _readErrorMessage(DioException error) {

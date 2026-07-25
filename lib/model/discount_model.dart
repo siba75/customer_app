@@ -10,6 +10,9 @@ class DiscountModel {
   final DateTime? startDate;
   final DateTime? endDate;
   final bool isActive;
+  final int? productId;
+  final int? categoryId;
+  final int? customerId;
 
   const DiscountModel({
     required this.id,
@@ -23,6 +26,9 @@ class DiscountModel {
     required this.startDate,
     required this.endDate,
     required this.isActive,
+    this.productId,
+    this.categoryId,
+    this.customerId,
   });
 
   factory DiscountModel.fromJson(Map<String, dynamic> json) {
@@ -38,13 +44,18 @@ class DiscountModel {
       startDate: _toDate(json['startDate']),
       endDate: _toDate(json['endDate']),
       isActive: json['isActive'] == true,
+      productId: _toNullableInt(json['productId']),
+      categoryId: _toNullableInt(json['categoryId']),
+      customerId: _toNullableInt(json['customerId']),
     );
   }
 
   bool get isPercentage => type.toUpperCase() == 'PERCENTAGE';
   bool get isFixedAmount => type.toUpperCase() == 'FIXED_AMOUNT';
   bool get isGlobalScope => scope.toUpperCase() == 'GLOBAL';
+  bool get isCustomerScope => scope.toUpperCase() == 'CUSTOMER';
   bool get isProductScope => scope.toUpperCase() == 'PRODUCT';
+  bool get isCategoryScope => scope.toUpperCase() == 'CATEGORY';
 
   static int _toInt(dynamic value) {
     if (value is int) return value;

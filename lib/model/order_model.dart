@@ -53,6 +53,7 @@ class Order {
   final double subtotal;
   final double delivery;
   final double discount;
+  final int loyaltyPointsUsed;
   final String status;
   final String statusText;
   final Color statusColor;
@@ -76,6 +77,7 @@ class Order {
     required this.subtotal,
     required this.delivery,
     required this.discount,
+    required this.loyaltyPointsUsed,
     required this.status,
     required this.statusText,
     required this.statusColor,
@@ -107,16 +109,26 @@ class Order {
         ? json['appliedDiscount'] as Map<String, dynamic>
         : <String, dynamic>{};
 
+    final subtotal = _toDouble(json['subtotal']);
+    final delivery = _toDouble(json['deliveryFee'] ?? json['delivery']);
+    final discount = _toDouble(json['discountAmount']);
+    final total = _toDouble(json['total']);
+
     return Order(
       id: json['id']?.toString() ?? '',
       orderNumber: 'ORD-${json['id'] ?? ''}',
       date: _dateValue(createdAt),
       dateFormatted: _dateFormatted(createdAt),
       time: _timeFormatted(createdAt),
-      total: _toDouble(json['total']),
-      subtotal: _toDouble(json['subtotal']),
-      delivery: 0,
-      discount: _toDouble(json['discountAmount']),
+      total: total > 0
+          ? total
+          : (subtotal + delivery - discount)
+                .clamp(0, double.infinity)
+                .toDouble(),
+      subtotal: subtotal,
+      delivery: delivery,
+      discount: discount,
+      loyaltyPointsUsed: _toInt(json['loyaltyPointsUsed']),
       status: status,
       statusText: _statusText(status),
       statusColor: _getStatusColor(status),
@@ -137,6 +149,12 @@ class Order {
     if (value is double) return value;
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
   static String _dateValue(DateTime? date) {

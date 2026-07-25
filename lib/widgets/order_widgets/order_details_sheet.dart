@@ -298,6 +298,12 @@ class OrderDetailsSheet extends StatelessWidget {
           _buildPriceRow(context, 'التوصيل', order.delivery),
           if (order.discount > 0)
             _buildPriceRow(context, 'الخصم', -order.discount),
+          if (order.loyaltyPointsUsed > 0)
+            _buildPointsRow(
+              context,
+              'نقاط الولاء المستخدمة',
+              order.loyaltyPointsUsed,
+            ),
           Divider(height: 24, color: context.appSoftBorder),
           _buildPriceRow(context, 'الإجمالي', order.total, isTotal: true),
         ],
@@ -337,6 +343,30 @@ class OrderDetailsSheet extends StatelessWidget {
                 : AppTypography.bodyMedium.copyWith(
                     color: context.appMutedText,
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPointsRow(BuildContext context, String label, int points) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppTypography.bodyMedium.copyWith(
+              color: context.appMutedText,
+            ),
+          ),
+          Text(
+            '$points نقطة',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.secondary,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),

@@ -8,6 +8,7 @@ import 'package:customer_app/cubit_folder/category_cubit.dart';
 import 'package:customer_app/cubit_folder/category_state.dart';
 import 'package:customer_app/cubit_folder/customer_profile_cubit.dart';
 import 'package:customer_app/cubit_folder/customer_profile_state.dart';
+import 'package:customer_app/cubit_folder/notifications_cubit.dart';
 import 'package:customer_app/cubit_folder/order_cubit.dart';
 import 'package:customer_app/cubit_folder/product_cubit.dart';
 import 'package:customer_app/cubit_folder/product_state.dart';
@@ -15,6 +16,7 @@ import 'package:customer_app/dio/ads_api.dart';
 import 'package:customer_app/dio/category_api.dart';
 import 'package:customer_app/dio/customer_api.dart';
 import 'package:customer_app/dio/discount_api.dart';
+import 'package:customer_app/dio/notifications_api.dart';
 import 'package:customer_app/dio/order_api.dart';
 import 'package:customer_app/dio/product_api.dart';
 import 'package:customer_app/pages/cart_screen.dart';
@@ -37,8 +39,14 @@ class HomeScreen extends StatelessWidget {
         BlocProvider(
           create: (_) => CustomerProfileCubit(CustomerApi())..loadProfile(),
         ),
-        BlocProvider(create: (_) => AdsCubit(AdsApi())..loadAds()),
+        BlocProvider(
+          create: (_) => AdsCubit(AdsApi())..loadAds(activeOnly: false),
+        ),
         BlocProvider(create: (_) => CartCubit(DiscountApi())),
+        BlocProvider(
+          create: (_) =>
+              NotificationsCubit(NotificationsApi())..loadNotifications(),
+        ),
         BlocProvider(create: (_) => OrderCubit(OrderApi())..loadOrders()),
         BlocProvider(
           create: (_) => CategoryCubit(CategoryApi())..loadCategories(),
@@ -142,11 +150,15 @@ class _HomeViewState extends State<_HomeView> {
     );
   }
 
-  void _openLoyaltyRewards() {
-    Navigator.push(
+  Future<void> _openLoyaltyRewards() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const LoyaltyRewardsScreen()),
     );
+
+    if (!mounted) return;
+    context.read<CustomerProfileCubit>().loadProfile();
+    context.read<CartCubit>().loadDiscounts();
   }
 
   Widget _buildOtherScreen() {

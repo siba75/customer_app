@@ -74,7 +74,7 @@ class HomeContent extends StatelessWidget {
     final categoryCubit = context.read<CategoryCubit>();
     final productCubit = context.read<ProductCubit>();
 
-    await adsCubit.loadAds();
+    await adsCubit.loadAds(activeOnly: false);
     await categoryCubit.loadCategories();
     await productCubit.refreshProducts();
   }

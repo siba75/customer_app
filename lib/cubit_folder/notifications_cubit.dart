@@ -1,23 +1,84 @@
 import 'package:customer_app/cubit_folder/notifications_state.dart';
+import 'package:customer_app/core/helpers/app_error_messages.dart';
 import 'package:customer_app/dio/notifications_api.dart';
 import 'package:customer_app/model/notification_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class NotificationsCubit extends Cubit<NotificationsState> {
   final NotificationsApi _api;
+  static const int _pageLimit = 10;
 
   NotificationsCubit(this._api) : super(const NotificationsState.initial());
 
-  Future<void> loadNotifications() async {
+  Future<void> loadNotifications({bool refresh = true}) async {
     try {
-      emit(state.copyWith(isLoading: true));
-      final notifications = await _api.getMyNotifications();
-      emit(state.copyWith(notifications: notifications, isLoading: false));
+      emit(
+        state.copyWith(
+          isLoading: refresh,
+          isLoadingMore: false,
+          offset: refresh ? 0 : state.offset,
+        ),
+      );
+
+      final page = await _api.getMyNotifications(
+        limit: _pageLimit,
+        offset: refresh ? 0 : state.offset,
+      );
+
+      emit(
+        state.copyWith(
+          notifications: page.notifications,
+          isLoading: false,
+          total: page.total,
+          limit: page.limit,
+          offset: page.offset + page.notifications.length,
+          isFinalPage: page.isFinalPage,
+        ),
+      );
     } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
       emit(
         state.copyWith(
           isLoading: false,
-          errorMessage: e.toString().replaceFirst('Exception: ', ''),
+          errorMessage: AppErrorMessages.friendly(
+            message,
+            fallback: 'تعذر تحميل الإشعارات.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoading || state.isLoadingMore || state.isFinalPage) return;
+
+    try {
+      emit(state.copyWith(isLoadingMore: true));
+
+      final page = await _api.getMyNotifications(
+        limit: state.limit,
+        offset: state.offset,
+      );
+
+      emit(
+        state.copyWith(
+          notifications: [...state.notifications, ...page.notifications],
+          isLoadingMore: false,
+          total: page.total,
+          limit: page.limit,
+          offset: page.offset + page.notifications.length,
+          isFinalPage: page.isFinalPage,
+        ),
+      );
+    } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
+      emit(
+        state.copyWith(
+          isLoadingMore: false,
+          errorMessage: AppErrorMessages.friendly(
+            message,
+            fallback: 'تعذر تحميل المزيد من الإشعارات.',
+          ),
         ),
       );
     }
@@ -70,11 +131,17 @@ class NotificationsCubit extends Cubit<NotificationsState> {
         ),
       );
     } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
+      if (AppErrorMessages.isBackendSchemaError(message)) {
+        emit(state.copyWith(clearUpdatingNotification: true));
+        return;
+      }
+
       emit(
         state.copyWith(
           notifications: _replaceNotification(notification),
           clearUpdatingNotification: true,
-          errorMessage: e.toString().replaceFirst('Exception: ', ''),
+          errorMessage: AppErrorMessages.friendly(message),
         ),
       );
     }
