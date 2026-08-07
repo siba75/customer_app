@@ -27,7 +27,15 @@ class CategoryModel {
     final products = json['products'] is List
         ? (json['products'] as List)
               .whereType<Map<String, dynamic>>()
-              .map(ProductModel.fromJson)
+              .map(
+                (product) => ProductModel.fromJson({
+                  ...product,
+                  'categoryId': product['categoryId'] ?? json['id'],
+                  'category':
+                      product['category'] ??
+                      {'id': json['id'], 'name': json['name']},
+                }),
+              )
               .toList()
         : <ProductModel>[];
 

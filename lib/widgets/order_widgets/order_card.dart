@@ -144,6 +144,10 @@ class OrderCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          if (order.hasAppliedDiscount) ...[
+            _buildDiscountBadge(context),
+            const SizedBox(height: 12),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -161,6 +165,44 @@ class OrderCard extends StatelessWidget {
               //   ),
               // ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiscountBadge(BuildContext context) {
+    final label = order.appliedDiscountName == null ||
+            order.appliedDiscountName!.isEmpty
+        ? 'خصم مطبق'
+        : order.appliedDiscountName!;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.local_offer_outlined,
+            size: 16,
+            color: AppColors.success,
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.success,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ],
       ),

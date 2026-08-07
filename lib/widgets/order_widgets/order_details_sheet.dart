@@ -288,39 +288,64 @@ class OrderDetailsSheet extends StatelessWidget {
   }
 
   Widget _buildPriceSummary(BuildContext context) {
+    final hasDiscountAmount = order.hasKnownDiscountAmount;
+    final hasDiscountName =
+        order.appliedDiscountName != null && order.appliedDiscountName!.isNotEmpty;
+    final payableTotal = order.total;
+
     return _buildInfoSection(
       context,
       title: 'ملخص الأسعار',
       icon: Icons.receipt_long_outlined,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildPriceRow(context, 'المجموع الفرعي', order.subtotal),
-          _buildPriceRow(context, 'التوصيل', order.delivery),
-          if (order.discount > 0)
-            _buildPriceRow(context, 'الخصم', -order.discount),
-          if (order.loyaltyPointsUsed > 0)
-            _buildPointsRow(
+          _buildPriceRow(
+            context,
+            'سعر المنتجات',
+            order.subtotal,
+            helper: '${order.items.length} منتجات',
+          ),
+          if (order.delivery > 0) ...[
+            const SizedBox(height: 8),
+            _buildPriceRow(context, 'رسوم التوصيل', order.delivery),
+          ],
+          if (hasDiscountAmount) ...[
+            const SizedBox(height: 8),
+            _buildPriceRow(
               context,
-              'نقاط الولاء المستخدمة',
-              order.loyaltyPointsUsed,
+              hasDiscountName ? 'الخصم - ${order.appliedDiscountName}' : 'الخصم',
+              -order.discount,
+              valueColor: AppColors.success,
             ),
+          ] else if (order.hasAppliedDiscount) ...[
+            const SizedBox(height: 8),
+            _buildTextRow(
+              context,
+              'الخصم',
+              hasDiscountName ? order.appliedDiscountName! : 'مطبق على الطلب',
+              helper: 'قيمة الخصم غير مرجعة من الخادم لهذا الطلب.',
+            ),
+          ],
           Divider(height: 24, color: context.appSoftBorder),
-          _buildPriceRow(context, 'الإجمالي', order.total, isTotal: true),
+          _buildTotalPanel(context, payableTotal),
         ],
       ),
     );
   }
 
-  Widget _buildPriceRow(
+  Widget _buildTextRow(
     BuildContext context,
     String label,
-    double amount, {
+    String value, {
     bool isTotal = false,
+    String? helper,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
@@ -333,15 +358,98 @@ class OrderDetailsSheet extends StatelessWidget {
                     color: context.appMutedText,
                   ),
           ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  style: isTotal
+                      ? AppTypography.titleSmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w900,
+                        )
+                      : AppTypography.bodyMedium.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w800,
+                        ),
+                ),
+                if (helper != null && helper.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    helper,
+                    textAlign: TextAlign.end,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: context.appMutedText,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceRow(
+    BuildContext context,
+    String label,
+    double amount, {
+    bool isTotal = false,
+    String? helper,
+    Color? valueColor,
+  }) {
+    final formattedAmount = amount < 0
+        ? '-${amount.abs().toStringAsFixed(2)} ل.س'
+        : '${amount.toStringAsFixed(2)} ل.س';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: isTotal
+                      ? AppTypography.titleMedium.copyWith(
+                          color: context.appText,
+                          fontWeight: FontWeight.bold,
+                        )
+                      : AppTypography.bodyMedium.copyWith(
+                          color: context.appMutedText,
+                        ),
+                ),
+                if (helper != null && helper.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    helper,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: context.appMutedText,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
           Text(
-            '${amount.toStringAsFixed(2)}  ل.س',
+            formattedAmount,
             style: isTotal
                 ? AppTypography.titleMedium.copyWith(
-                    color: AppColors.primary,
+                    color: valueColor ?? AppColors.primary,
                     fontWeight: FontWeight.bold,
                   )
                 : AppTypography.bodyMedium.copyWith(
-                    color: context.appMutedText,
+                    color: valueColor ?? context.appText,
+                    fontWeight: FontWeight.w800,
                   ),
           ),
         ],
@@ -349,23 +457,50 @@ class OrderDetailsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildPointsRow(BuildContext context, String label, int points) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _buildTotalPanel(BuildContext context, double total) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: AppTypography.bodyMedium.copyWith(
-              color: context.appMutedText,
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.payments_outlined,
+              color: AppColors.primary,
             ),
           ),
-          Text(
-            '$points نقطة',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.secondary,
-              fontWeight: FontWeight.w800,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'إجمالي المبلغ للدفع',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.appMutedText,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${total.toStringAsFixed(2)} ل.س',
+                  style: AppTypography.headlineSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

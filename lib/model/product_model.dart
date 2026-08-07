@@ -48,7 +48,7 @@ class ProductModel {
       sellingPrice: _toDouble(json['sellingPrice'] ?? json['price']),
       quantityInStock: _toInt(json['quantityInStock']),
       minQuantity: _toInt(json['minQuantity']),
-      categoryId: _toNullableInt(json['categoryId']),
+      categoryId: _toNullableInt(json['categoryId'] ?? category['id']),
       supplierId: _toNullableInt(json['supplierId']),
       categoryName: category['name']?.toString(),
       supplierName: supplier['fullName']?.toString(),
@@ -60,7 +60,11 @@ class ProductModel {
     );
   }
 
-  ProductModel copyWith({String? imageUrl}) {
+  ProductModel copyWith({
+    String? imageUrl,
+    int? categoryId,
+    String? categoryName,
+  }) {
     return ProductModel(
       id: id,
       name: name,
@@ -68,9 +72,9 @@ class ProductModel {
       sellingPrice: sellingPrice,
       quantityInStock: quantityInStock,
       minQuantity: minQuantity,
-      categoryId: categoryId,
+      categoryId: categoryId ?? this.categoryId,
       supplierId: supplierId,
-      categoryName: categoryName,
+      categoryName: categoryName ?? this.categoryName,
       supplierName: supplierName,
       description: description,
       imageUrl: imageUrl ?? this.imageUrl,
@@ -83,24 +87,21 @@ class ProductModel {
   }) {
     final resolvedImage = _absoluteImageUrl(imageUrl);
     final discount = _bestDiscount(discounts);
-    final discountedPrice = discount == null
-        ? sellingPrice
-        : _discountedPrice(sellingPrice, discount);
-    final displayPrice = _roundMoney(discountedPrice);
     final originalPrice = _roundMoney(sellingPrice);
-    final hasDiscount =
-        discount != null && originalPrice - displayPrice >= 0.01;
+    final hasDiscount = discount != null;
 
     return {
       'id': id.toString(),
       'name': name,
       'barcode': barcode,
-      'price': hasDiscount ? displayPrice : originalPrice,
-      'old_price': hasDiscount ? originalPrice : null,
+      'price': originalPrice,
+      'old_price': null,
       'discount_id': hasDiscount ? discount.id : null,
       'discount_name': hasDiscount ? discount.name : null,
       'discount_scope': hasDiscount ? discount.scope : null,
       'discount_type': hasDiscount ? discount.type : null,
+      'discount_value': hasDiscount ? discount.value : null,
+      'discount_label': hasDiscount ? _discountLabel(discount) : null,
       'unit': 'قطعة',
       'image': resolvedImage,
       'has_image': resolvedImage != null,
@@ -163,14 +164,14 @@ class ProductModel {
 
   DiscountModel? _bestDiscount(List<DiscountModel> discounts) {
     DiscountModel? bestDiscount;
-    var bestPrice = sellingPrice;
+    var bestAmount = 0.0;
 
     for (final discount in discounts) {
       if (!_discountApplies(discount)) continue;
 
-      final priceAfterDiscount = _discountedPrice(sellingPrice, discount);
-      if (priceAfterDiscount < bestPrice) {
-        bestPrice = priceAfterDiscount;
+      final discountAmount = sellingPrice - _discountedPrice(sellingPrice, discount);
+      if (discountAmount > bestAmount) {
+        bestAmount = discountAmount;
         bestDiscount = discount;
       }
     }
@@ -194,7 +195,12 @@ class ProductModel {
 
   double _discountedPrice(double price, DiscountModel discount) {
     if (discount.isPercentage) {
-      return (price * (1 - discount.value / 100)).clamp(0, price).toDouble();
+      var discountAmount = price * discount.value / 100;
+      if (discount.maxInvoiceValue > 0 &&
+          discountAmount > discount.maxInvoiceValue) {
+        discountAmount = discount.maxInvoiceValue;
+      }
+      return (price - discountAmount).clamp(0, price).toDouble();
     }
 
     if (discount.isFixedAmount) {
@@ -206,5 +212,17 @@ class ProductModel {
 
   double _roundMoney(double value) {
     return (value * 100).roundToDouble() / 100;
+  }
+
+  String _discountLabel(DiscountModel discount) {
+    final value = _formatDiscountValue(discount.value);
+    if (discount.isPercentage) return '$value%';
+    if (discount.isFixedAmount) return '$value ل.س';
+    return 'خصم متاح';
+  }
+
+  String _formatDiscountValue(double value) {
+    if (value == value.roundToDouble()) return value.toInt().toString();
+    return value.toStringAsFixed(2);
   }
 }

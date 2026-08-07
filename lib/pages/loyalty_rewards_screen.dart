@@ -26,6 +26,33 @@ class LoyaltyRewardsScreen extends StatelessWidget {
 class _LoyaltyRewardsView extends StatelessWidget {
   const _LoyaltyRewardsView();
 
+  Future<void> _confirmRedeem(
+    BuildContext context,
+    LoyaltyRewardModel reward,
+  ) async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RedeemConfirmationSheet(reward: reward),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+    context.read<LoyaltyRewardsCubit>().redeemReward(reward);
+  }
+
+  void _showRedemptionResult(
+    BuildContext context,
+    LoyaltyRedemptionModel redemption,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RedemptionResultSheet(redemption: redemption),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,6 +94,11 @@ class _LoyaltyRewardsView extends StatelessWidget {
                 backgroundColor: AppColors.success,
                 icon: Icons.check_circle_outline,
               );
+            }
+
+            final redemption = state.lastRedemption;
+            if (redemption != null) {
+              _showRedemptionResult(context, redemption);
             }
 
             if (errorMessage != null) {
@@ -139,15 +171,15 @@ class _LoyaltyRewardsView extends StatelessWidget {
               children: [
                 _LoyaltyPolicyHeader(policy: policy),
                 const SizedBox(height: 18),
+                const _RewardsIntro(),
+                const SizedBox(height: 14),
                 ...rewards.map(
                   (reward) => Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: _RewardCard(
                       reward: reward,
                       isRedeeming: redeemingOfferId == reward.id,
-                      onRedeem: () => context
-                          .read<LoyaltyRewardsCubit>()
-                          .redeemReward(reward),
+                      onRedeem: () => _confirmRedeem(context, reward),
                     ),
                   ),
                 ),
@@ -155,6 +187,62 @@ class _LoyaltyRewardsView extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _RewardsIntro extends StatelessWidget {
+  const _RewardsIntro();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.appSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.appSoftBorder),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.swap_horiz_rounded,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'بشو بتحب تستبدل نقاطك؟',
+                  style: AppTypography.titleSmall.copyWith(
+                    color: context.appText,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'اختاري عرضاً واضحاً، أكدي الاستبدال، وبعدها يتحول العرض إلى خصم جاهز لإتمام الطلب.',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: context.appMutedText,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -295,6 +383,254 @@ class _PolicyTile extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RedeemConfirmationSheet extends StatelessWidget {
+  final LoyaltyRewardModel reward;
+
+  const _RedeemConfirmationSheet({required this.reward});
+
+  @override
+  Widget build(BuildContext context) {
+    return _LoyaltyBottomSheetFrame(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _SheetIcon(
+                icon: Icons.card_giftcard_outlined,
+                color: AppColors.secondary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'تأكيد استبدال النقاط',
+                  style: AppTypography.titleLarge.copyWith(
+                    color: context.appText,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'سيتم خصم ${reward.pointsCost} نقطة من رصيدك مقابل ${reward.displayTitle}.',
+            style: AppTypography.bodyLarge.copyWith(
+              color: context.appText,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          _SheetInfoPanel(
+            rows: [
+              _SheetInfoRow('الخصم الناتج', reward.displayDiscountValue),
+              _SheetInfoRow('مدة الصلاحية', reward.displayValidity),
+              _SheetInfoRow(
+                'عدد مرات الاستخدام',
+                reward.maxUses == null ? 'غير محدد' : '${reward.maxUses}',
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('إلغاء'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text(
+                    'تأكيد الاستبدال',
+                    style: TextStyle(color: AppColors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RedemptionResultSheet extends StatelessWidget {
+  final LoyaltyRedemptionModel redemption;
+
+  const _RedemptionResultSheet({required this.redemption});
+
+  @override
+  Widget build(BuildContext context) {
+    final offer = redemption.offer;
+
+    return _LoyaltyBottomSheetFrame(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const _SheetIcon(
+                icon: Icons.check_circle_outline,
+                color: AppColors.success,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'صار عندك خصم جاهز',
+                  style: AppTypography.titleLarge.copyWith(
+                    color: context.appText,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'تم تحويل ${redemption.pointsSpent} نقطة إلى خصم يمكن تطبيقه عند إتمام الطلب.',
+            style: AppTypography.bodyLarge.copyWith(
+              color: context.appText,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          _SheetInfoPanel(
+            rows: [
+              _SheetInfoRow(
+                'الخصم',
+                offer?.displayDiscountValue ?? 'جاهز للاستخدام',
+              ),
+              _SheetInfoRow('رقم الخصم', '#${redemption.discountId}'),
+              _SheetInfoRow(
+                'الاستخدام',
+                'سيظهر في إتمام الطلب ويطبقه النظام عندما يكون أفضل خصم متاح',
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'تمام',
+                style: TextStyle(color: AppColors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoyaltyBottomSheetFrame extends StatelessWidget {
+  final Widget child;
+
+  const _LoyaltyBottomSheetFrame({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: context.appSurface,
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: context.appCardShadow(
+            alpha: 0.18,
+            blur: 32,
+            offset: const Offset(0, 16),
+          ),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _SheetIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+
+  const _SheetIcon({required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Icon(icon, color: color),
+    );
+  }
+}
+
+class _SheetInfoPanel extends StatelessWidget {
+  final List<_SheetInfoRow> rows;
+
+  const _SheetInfoPanel({required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.appBackground,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: context.appSoftBorder),
+      ),
+      child: Column(
+        children: rows
+            .map(
+              (row) => Padding(
+                padding: EdgeInsets.only(
+                  bottom: row == rows.last ? 0 : 10,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      row.label,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: context.appMutedText,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      row.value,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: context.appText,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _SheetInfoRow {
+  final String label;
+  final String value;
+
+  const _SheetInfoRow(this.label, this.value);
 }
 
 class _RewardCard extends StatelessWidget {

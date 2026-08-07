@@ -1,5 +1,6 @@
 // lib/screens/login_screen.dart
 import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/core/services/notification_service.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -60,6 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (state is LoginSuccess) {
             await SecureStorage.write('auth_token', state.token);
             await SecureStorage.write('user_email', state.email);
+            await NotificationService.prepareForSignedInUser();
 
             if (!context.mounted) return;
 
@@ -70,9 +72,9 @@ class _LoginScreenState extends State<LoginScreen> {
               icon: Icons.check_circle_outline,
             );
 
-            Navigator.pushReplacement(
-              context,
+            Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const HomeScreen()),
+              (route) => false,
             );
           } else if (state is LoginError) {
             showCustomSnackBar(

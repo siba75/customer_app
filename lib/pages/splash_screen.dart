@@ -1,6 +1,12 @@
 // lib/screens/splash_screen.dart
+import 'dart:async';
+
+import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/core/services/notification_service.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/dio/customer_api.dart';
+import 'package:customer_app/pages/home_screen.dart';
 import 'package:customer_app/pages/login_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -40,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward();
-    Future.delayed(const Duration(milliseconds: 7000), _goToLogin);
+    Future.delayed(const Duration(milliseconds: 2200), _goToNextScreen);
   }
 
   @override
@@ -49,20 +55,47 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  void _goToLogin() {
+  Future<void> _goToNextScreen() async {
     if (!mounted) return;
 
-    Navigator.pushReplacement(
-      context,
+    final isLoggedIn = await _hasValidSavedSession();
+
+    if (isLoggedIn) {
+      unawaited(NotificationService.prepareForSignedInUser());
+    }
+
+    if (!mounted) return;
+
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 520),
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const LoginScreen(),
+            isLoggedIn ? const HomeScreen() : const LoginScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
       ),
+      (route) => false,
     );
+  }
+
+  Future<bool> _hasValidSavedSession() async {
+    final token = await SecureStorage.read('auth_token');
+    if (token == null || token.isEmpty) return false;
+
+    try {
+      await CustomerApi().getProfile();
+      return true;
+    } on CustomerSessionExpiredException {
+      await SecureStorage.delete('auth_token');
+      await SecureStorage.delete('user_email');
+      NotificationService.disconnectSocketNotifications();
+      return false;
+    } on CustomerConnectionException {
+      return true;
+    } catch (_) {
+      return true;
+    }
   }
 
   @override

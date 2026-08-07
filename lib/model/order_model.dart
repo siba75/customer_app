@@ -50,10 +50,11 @@ class Order {
   final String dateFormatted;
   final String time;
   final double total;
+  final bool hasExactTotal;
   final double subtotal;
   final double delivery;
   final double discount;
-  final int loyaltyPointsUsed;
+  final int? appliedDiscountId;
   final String status;
   final String statusText;
   final Color statusColor;
@@ -74,10 +75,11 @@ class Order {
     required this.dateFormatted,
     required this.time,
     required this.total,
+    required this.hasExactTotal,
     required this.subtotal,
     required this.delivery,
     required this.discount,
-    required this.loyaltyPointsUsed,
+    this.appliedDiscountId,
     required this.status,
     required this.statusText,
     required this.statusColor,
@@ -101,6 +103,13 @@ class Order {
   bool get isTrackingFinished => isDelivered || isCancelled;
   bool get canCancel => isPending || isPreparing;
   bool get hasTracking => trackingNumber != null && trackingNumber!.isNotEmpty;
+  bool get hasAppliedDiscount {
+    return appliedDiscountId != null ||
+        (appliedDiscountName != null && appliedDiscountName!.isNotEmpty) ||
+        discount > 0;
+  }
+
+  bool get hasKnownDiscountAmount => discount > 0;
 
   factory Order.fromJson(Map<String, dynamic> json) {
     final createdAt = DateTime.tryParse(json['createdAt']?.toString() ?? '');
@@ -113,6 +122,13 @@ class Order {
     final delivery = _toDouble(json['deliveryFee'] ?? json['delivery']);
     final discount = _toDouble(json['discountAmount']);
     final total = _toDouble(json['total']);
+    final appliedDiscountId = _toNullableInt(json['appliedDiscountId']);
+    final appliedDiscountName = appliedDiscount['name']?.toString();
+    final hasAppliedDiscount =
+        appliedDiscountId != null ||
+        (appliedDiscountName != null && appliedDiscountName.isNotEmpty) ||
+        discount > 0;
+    final hasExactTotal = total > 0 || discount > 0 || !hasAppliedDiscount;
 
     return Order(
       id: json['id']?.toString() ?? '',
@@ -125,10 +141,11 @@ class Order {
           : (subtotal + delivery - discount)
                 .clamp(0, double.infinity)
                 .toDouble(),
+      hasExactTotal: hasExactTotal,
       subtotal: subtotal,
       delivery: delivery,
       discount: discount,
-      loyaltyPointsUsed: _toInt(json['loyaltyPointsUsed']),
+      appliedDiscountId: appliedDiscountId,
       status: status,
       statusText: _statusText(status),
       statusColor: _getStatusColor(status),
@@ -141,7 +158,7 @@ class Order {
       address: json['deliveryAddress']?.toString() ?? 'العنوان الافتراضي',
       paymentMethod: 'cod',
       paymentText: 'الدفع عند الاستلام',
-      appliedDiscountName: appliedDiscount['name']?.toString(),
+      appliedDiscountName: appliedDiscountName,
     );
   }
 
@@ -151,10 +168,11 @@ class Order {
     return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 
-  static int _toInt(dynamic value) {
+  static int? _toNullableInt(dynamic value) {
+    if (value == null) return null;
     if (value is int) return value;
     if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
+    return int.tryParse(value.toString());
   }
 
   static String _dateValue(DateTime? date) {

@@ -15,11 +15,9 @@ class ProductImageSection extends StatelessWidget {
     final isTablet = screenWidth >= 600;
     final isWeb = screenWidth >= 1200;
     final imageHeight = isWeb ? 470.0 : (isTablet ? 410.0 : 320.0);
-    final price = _toDouble(product['price']);
-    final oldPrice = product['old_price'] == null
-        ? null
-        : _toDouble(product['old_price']);
-    final hasDiscount = oldPrice != null && oldPrice - price >= 0.01;
+    final discountName = product['discount_name']?.toString();
+    final discountLabel = product['discount_label']?.toString();
+    final hasDiscount = discountName != null && discountName.isNotEmpty;
     final imageUrl = product['image']?.toString();
 
     return Container(
@@ -55,11 +53,6 @@ class ProductImageSection extends StatelessWidget {
                 onTap: () => Navigator.pop(context),
               ),
             ),
-            Positioned(
-              top: 14,
-              left: 14,
-              child: _CircleAction(icon: Icons.favorite_border, onTap: () {}),
-            ),
             if (hasDiscount)
               Positioned(
                 bottom: 18,
@@ -73,9 +66,11 @@ class ProductImageSection extends StatelessWidget {
                     color: AppColors.secondary,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Text(
-                    'عرض خاص',
-                    style: TextStyle(
+                  child: Text(
+                    discountLabel == null || discountLabel.isEmpty
+                        ? 'خصم متاح'
+                        : 'خصم $discountLabel',
+                    style: const TextStyle(
                       color: AppColors.white,
                       fontWeight: FontWeight.w900,
                     ),
@@ -110,11 +105,6 @@ class ProductImageSection extends StatelessWidget {
     );
   }
 
-  double _toDouble(dynamic value) {
-    if (value is double) return value;
-    if (value is num) return value.toDouble();
-    return double.tryParse(value?.toString() ?? '') ?? 0;
-  }
 }
 
 class _ImageGradient extends StatelessWidget {

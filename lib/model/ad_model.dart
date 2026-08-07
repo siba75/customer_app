@@ -12,6 +12,8 @@ class AdModel {
   final bool isActive;
   final DateTime? startDate;
   final DateTime? endDate;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const AdModel({
     required this.id,
@@ -23,6 +25,8 @@ class AdModel {
     required this.isActive,
     this.startDate,
     this.endDate,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory AdModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +40,8 @@ class AdModel {
       isActive: json['isActive'] == true,
       startDate: _toDate(json['startDate']),
       endDate: _toDate(json['endDate']),
+      createdAt: _toDate(json['createdAt']),
+      updatedAt: _toDate(json['updatedAt']),
     );
   }
 
@@ -53,9 +59,34 @@ class AdModel {
 
   bool get hasImage => imageUrl != null && imageUrl!.isNotEmpty;
 
+  bool get hasLink => linkUrl != null && linkUrl!.isNotEmpty;
+
+  bool get isScheduled {
+    if (!isActive || startDate == null) return false;
+    return DateTime.now().toUtc().isBefore(startDate!.toUtc());
+  }
+
+  bool get isExpired {
+    if (!isActive || endDate == null) return false;
+    return DateTime.now().toUtc().isAfter(endDate!.toUtc());
+  }
+
+  bool get isLive => isCurrentlyVisible;
+
   String get subtitle => description;
 
-  String get badge => isActive ? 'إعلان فعال' : 'إعلان غير فعال';
+  String get badge {
+    if (!isActive) return 'غير فعال';
+    if (isScheduled) return 'مجدول';
+    if (isExpired) return 'منتهي';
+    return 'فعال الآن';
+  }
+
+  Color get statusColor {
+    if (isLive) return AppColors.success;
+    if (isScheduled) return AppColors.secondary;
+    return AppColors.error;
+  }
 
   String get placementLabel {
     switch (placement) {
@@ -78,6 +109,14 @@ class AdModel {
     if (start == null) return 'حتى $end';
     return 'من $start إلى $end';
   }
+
+  String get startDateLabel => _formatDateTime(startDate) ?? 'غير محدد';
+
+  String get endDateLabel => _formatDateTime(endDate) ?? 'مستمر';
+
+  String get createdAtLabel => _formatDateTime(createdAt) ?? 'غير متاح';
+
+  String get updatedAtLabel => _formatDateTime(updatedAt) ?? 'غير متاح';
 
   String get actionText =>
       linkUrl == null || linkUrl!.isEmpty ? 'اكتشف العرض' : 'عرض التفاصيل';
@@ -120,6 +159,16 @@ class AdModel {
     final day = value.day.toString().padLeft(2, '0');
     final month = value.month.toString().padLeft(2, '0');
     return '$day/$month/${value.year}';
+  }
+
+  static String? _formatDateTime(DateTime? value) {
+    if (value == null) return null;
+    final local = value.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$day/$month/${local.year} - $hour:$minute';
   }
 
   static String? _nullableString(dynamic value) {

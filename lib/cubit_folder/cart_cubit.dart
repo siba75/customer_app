@@ -2,6 +2,7 @@ import 'package:customer_app/cubit_folder/cart_state.dart';
 import 'package:customer_app/dio/discount_api.dart';
 import 'package:customer_app/model/cart_item_model.dart';
 import 'package:customer_app/model/discount_calculation_model.dart';
+import 'package:customer_app/model/discount_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CartCubit extends Cubit<CartState> {
@@ -116,16 +117,16 @@ class CartCubit extends Cubit<CartState> {
 
     DiscountCalculationModel? bestCalculation;
     try {
-      bestCalculation = await _discountApi.getBestDiscount(subtotal: subtotal);
+      bestCalculation = await _calculateBestDiscountFromBackend();
+      bestCalculation ??= await _calculateBestDiscountLocally();
     } catch (_) {
-      bestCalculation = await _calculateBestDiscountLocally(subtotal);
+      bestCalculation = await _calculateBestDiscountLocally();
     }
 
     if (requestId != _discountRequestId) return;
 
     final shouldUseInvoiceDiscount =
-        bestCalculation != null &&
-        bestCalculation.discountAmount > state.itemDiscount;
+        bestCalculation != null && bestCalculation.discountAmount > 0;
 
     emit(
       state.copyWith(
@@ -136,32 +137,129 @@ class CartCubit extends Cubit<CartState> {
     );
   }
 
-  Future<DiscountCalculationModel?> _calculateBestDiscountLocally(
-    double subtotal,
-  ) async {
-    final discounts = state.activeDiscounts
-        .where((discount) => discount.isGlobalScope || discount.isCustomerScope)
-        .toList();
+  Future<DiscountCalculationModel?> _calculateBestDiscountFromBackend() async {
+    final calculations = <DiscountCalculationModel>[];
 
-    DiscountCalculationModel? bestCalculation;
-    for (final discount in discounts) {
+    await _tryAddCalculation(
+      calculations,
+      () => _discountApi.getBestDiscount(subtotal: state.subtotal),
+    );
+
+    for (final entry in _subtotalByProduct().entries) {
+      await _tryAddCalculation(
+        calculations,
+        () => _discountApi.getBestDiscount(
+          subtotal: entry.value,
+          productId: entry.key,
+        ),
+      );
+    }
+
+    for (final entry in _subtotalByCategory().entries) {
+      await _tryAddCalculation(
+        calculations,
+        () => _discountApi.getBestDiscount(
+          subtotal: entry.value,
+          categoryId: entry.key,
+        ),
+      );
+    }
+
+    return _bestCalculation(calculations);
+  }
+
+  Future<void> _tryAddCalculation(
+    List<DiscountCalculationModel> calculations,
+    Future<DiscountCalculationModel?> Function() request,
+  ) async {
+    try {
+      final calculation = await request();
+      if (calculation != null && calculation.discountAmount > 0) {
+        final alreadyAdded = calculations.any(
+          (item) =>
+              item.discountId == calculation.discountId &&
+              item.subtotal == calculation.subtotal,
+        );
+        if (!alreadyAdded) calculations.add(calculation);
+      }
+    } catch (_) {
+      // Some scope checks can fail for a product/category; other discounts may still be valid.
+    }
+  }
+
+  Future<DiscountCalculationModel?> _calculateBestDiscountLocally() async {
+    final calculations = <DiscountCalculationModel>[];
+    for (final discount in state.activeDiscounts) {
       try {
+        final scopedSubtotal = _subtotalForDiscount(discount);
+        if (scopedSubtotal <= 0) continue;
+
         final calculation = await _discountApi.calculateDiscount(
           discountId: discount.id,
-          subtotal: subtotal,
+          subtotal: scopedSubtotal,
           customerId: discount.customerId,
+          productId: discount.productId,
+          categoryId: discount.categoryId,
         );
 
-        if (bestCalculation == null ||
-            calculation.discountAmount > bestCalculation.discountAmount) {
-          bestCalculation = calculation;
-        }
+        if (calculation.discountAmount > 0) calculations.add(calculation);
       } catch (_) {
         continue;
       }
     }
 
+    return _bestCalculation(calculations);
+  }
+
+  DiscountCalculationModel? _bestCalculation(
+    List<DiscountCalculationModel> calculations,
+  ) {
+    DiscountCalculationModel? bestCalculation;
+
+    for (final calculation in calculations) {
+      if (bestCalculation == null ||
+          calculation.discountAmount > bestCalculation.discountAmount) {
+        bestCalculation = calculation;
+      }
+    }
+
     return bestCalculation;
+  }
+
+  Map<int, double> _subtotalByProduct() {
+    final result = <int, double>{};
+
+    for (final item in state.items) {
+      final productId = item.productId;
+      if (productId == null) continue;
+      result[productId] = (result[productId] ?? 0) + item.originalTotal;
+    }
+
+    return result;
+  }
+
+  Map<int, double> _subtotalByCategory() {
+    final result = <int, double>{};
+
+    for (final item in state.items) {
+      final categoryId = item.categoryId;
+      if (categoryId == null) continue;
+      result[categoryId] = (result[categoryId] ?? 0) + item.originalTotal;
+    }
+
+    return result;
+  }
+
+  double _subtotalForDiscount(DiscountModel discount) {
+    if (discount.isProductScope && discount.productId != null) {
+      return _subtotalByProduct()[discount.productId] ?? 0;
+    }
+
+    if (discount.isCategoryScope && discount.categoryId != null) {
+      return _subtotalByCategory()[discount.categoryId] ?? 0;
+    }
+
+    return state.subtotal;
   }
 
   int _clampQuantity(int quantity, int? maxQuantity) {

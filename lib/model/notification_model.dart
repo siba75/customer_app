@@ -130,8 +130,26 @@ class CustomerNotification {
         'text',
       ], fallback: 'لديك تحديث جديد في حسابك.'),
       createdAt:
-          _readDate(json, const ['createdAt', 'created_at', 'date']) ??
-          _readDate(source, const ['createdAt', 'created_at', 'date']),
+          _readDate(json, const [
+            'createdAt',
+            'created_at',
+            'sentAt',
+            'sent_at',
+            'deliveredAt',
+            'delivered_at',
+            'timestamp',
+            'date',
+          ]) ??
+          _readDate(source, const [
+            'createdAt',
+            'created_at',
+            'sentAt',
+            'sent_at',
+            'deliveredAt',
+            'delivered_at',
+            'timestamp',
+            'date',
+          ]),
       type: _typeFrom(rawType, source),
       isRead: _toBool(isReadValue) || readAt.isNotEmpty,
       actionText: _optionalText(source, const [
@@ -146,7 +164,7 @@ class CustomerNotification {
     for (final key in ['notification', 'data', 'payload']) {
       final value = json[key];
       if (value is Map<String, dynamic>) {
-        return {...json, ...value};
+        return {...value, ...json};
       }
     }
 
@@ -176,6 +194,20 @@ class CustomerNotification {
     if (difference.inHours < 24) return 'منذ ${difference.inHours} ساعة';
     if (difference.inDays == 1) return 'أمس';
     if (difference.inDays < 7) return 'منذ ${difference.inDays} أيام';
+
+    return '${createdAt!.day}/${createdAt!.month}/${createdAt!.year}';
+  }
+
+  String get receivedTime {
+    if (createdAt == null) return 'وقت غير محدد';
+
+    final hour = createdAt!.hour.toString().padLeft(2, '0');
+    final minute = createdAt!.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  String get receivedDate {
+    if (createdAt == null) return '';
 
     return '${createdAt!.day}/${createdAt!.month}/${createdAt!.year}';
   }

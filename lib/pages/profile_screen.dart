@@ -1,4 +1,6 @@
 // lib/screens/profile/profile_screen.dart
+import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/core/services/notification_service.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -10,6 +12,7 @@ import 'package:customer_app/cubit_folder/order_state.dart';
 import 'package:customer_app/dio/customer_api.dart';
 import 'package:customer_app/dio/order_api.dart';
 import 'package:customer_app/model/customer_profile_model.dart';
+import 'package:customer_app/pages/login_screen.dart';
 import 'package:customer_app/pages/loyalty_rewards_screen.dart';
 import 'package:customer_app/pages/notifications_screen.dart';
 import 'package:customer_app/widgets/customer/profile_header.dart';
@@ -415,7 +418,18 @@ class _MenuSection extends StatelessWidget {
             child: const Text('إلغاء'),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () async {
+              await SecureStorage.delete('auth_token');
+              await SecureStorage.delete('user_email');
+              NotificationService.disconnectSocketNotifications();
+
+              if (!context.mounted) return;
+
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
             child: const Text('خروج', style: TextStyle(color: AppColors.white)),
           ),
         ],

@@ -26,12 +26,7 @@ class CartScreen extends StatelessWidget {
             BlocProvider.value(value: context.read<OrderCubit>()),
             BlocProvider.value(value: context.read<CustomerProfileCubit>()),
           ],
-          child: CheckoutScreen(
-            initialSubtotal: state.subtotal,
-            initialDelivery: state.delivery,
-            initialDiscount: state.discount,
-            initialDiscountName: state.discountName,
-          ),
+          child: const CheckoutScreen(),
         ),
       ),
     );
@@ -81,7 +76,6 @@ class CartScreen extends StatelessWidget {
               if (state.hasItems)
                 CartSummaryCard(
                   subtotal: state.subtotal,
-                  delivery: state.delivery,
                   discount: state.discount,
                   discountName: state.discountName,
                   isCalculatingDiscount: state.isCalculatingDiscount,

@@ -39,7 +39,6 @@ class OrderApi {
   Future<Order> createOrder({
     required List<CartItem> items,
     int? discountId,
-    int loyaltyPointsUsed = 0,
     String? deliveryAddress,
   }) async {
     try {
@@ -58,7 +57,6 @@ class OrderApi {
         ApiConfig.customerOrdersEndpoint,
         data: {
           'discountId': discountId,
-          'loyaltyPointsUsed': loyaltyPointsUsed,
           if (deliveryAddress != null && deliveryAddress.trim().isNotEmpty)
             'deliveryAddress': deliveryAddress.trim(),
           'items': orderItems,

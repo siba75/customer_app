@@ -104,7 +104,14 @@ class _NotificationBody extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text(notification.time, style: AppTypography.bodySmall),
+            if (notification.time.isNotEmpty)
+              Text(
+                notification.time,
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.appMutedText,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 6),
@@ -125,6 +132,28 @@ class _NotificationBody extends StatelessWidget {
             ),
           ),
         ],
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Icon(
+              Icons.schedule_rounded,
+              size: 15,
+              color: context.appMutedText.withValues(alpha: 0.82),
+            ),
+            Text(
+              notification.receivedDate.isEmpty
+                  ? 'وصل ${notification.receivedTime}'
+                  : 'وصل ${notification.receivedTime} - ${notification.receivedDate}',
+              style: AppTypography.bodySmall.copyWith(
+                color: context.appMutedText,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

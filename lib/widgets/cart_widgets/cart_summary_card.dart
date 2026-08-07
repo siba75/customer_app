@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 class CartSummaryCard extends StatelessWidget {
   final double subtotal;
-  final double delivery;
   final double discount;
   final String? discountName;
   final bool isCalculatingDiscount;
@@ -14,14 +13,13 @@ class CartSummaryCard extends StatelessWidget {
   const CartSummaryCard({
     super.key,
     required this.subtotal,
-    required this.delivery,
     required this.discount,
     this.discountName,
     this.isCalculatingDiscount = false,
     required this.onCheckout,
   });
 
-  double get total => subtotal + delivery - discount;
+  double get total => (subtotal - discount).clamp(0, double.infinity).toDouble();
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +49,7 @@ class CartSummaryCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _SummaryRow(label: 'المجموع', value: subtotal),
-                  const SizedBox(height: 10),
-                  _SummaryRow(label: 'التوصيل', value: delivery),
+                  _SummaryRow(label: 'المجموع قبل الخصم', value: subtotal),
                   if (isCalculatingDiscount) ...[
                     const SizedBox(height: 10),
                     const _CalculatingDiscountRow(),
@@ -68,6 +64,14 @@ class CartSummaryCard extends StatelessWidget {
                       valueColor: AppColors.success,
                     ),
                   ],
+                  const SizedBox(height: 10),
+                  Divider(height: 1, color: context.appSoftBorder),
+                  const SizedBox(height: 10),
+                  _SummaryRow(
+                    label: 'الإجمالي للدفع',
+                    value: total,
+                    valueColor: AppColors.primary,
+                  ),
                 ],
               ),
             ),
@@ -79,7 +83,7 @@ class CartSummaryCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'الإجمالي',
+                        'المبلغ للدفع',
                         style: AppTypography.bodyMedium.copyWith(
                           color: context.appMutedText,
                         ),

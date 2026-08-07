@@ -3,14 +3,10 @@ class CartItem {
   final String name;
   final String unit;
   final double price;
-  final double? oldPrice;
   final int quantity;
   final String? imageUrl;
   final int? productId;
   final int? categoryId;
-  final int? discountId;
-  final String? discountName;
-  final String? discountScope;
   final int? maxQuantity;
 
   const CartItem({
@@ -19,28 +15,15 @@ class CartItem {
     required this.unit,
     required this.price,
     required this.quantity,
-    this.oldPrice,
     this.imageUrl,
     this.productId,
     this.categoryId,
-    this.discountId,
-    this.discountName,
-    this.discountScope,
     this.maxQuantity,
   });
 
   double get total => price * quantity;
 
-  double get originalPrice => oldPrice ?? price;
-
-  double get originalTotal => originalPrice * quantity;
-
-  double get lineDiscount {
-    if (!hasDiscount) return 0;
-    return (oldPrice! - price) * quantity;
-  }
-
-  bool get hasDiscount => oldPrice != null && oldPrice! > price;
+  double get originalTotal => total;
 
   factory CartItem.fromProductMap(
     Map<String, dynamic> product, {
@@ -51,22 +34,18 @@ class CartItem {
     final productOldPrice = product['old_price'] == null
         ? null
         : _toDouble(product['old_price']);
-    final discountScope = product['discount_scope']?.toString().toUpperCase();
+    final sellingPrice = productOldPrice ?? productPrice;
 
     return CartItem(
       id: id,
       productId: int.tryParse(id),
       categoryId: _toNullableInt(product['category_id']),
-      discountId: _toNullableInt(product['discount_id']),
-      discountName: product['discount_name']?.toString(),
-      discountScope: discountScope,
       maxQuantity: _toNullableInt(
         product['quantity_in_stock'] ?? product['quantityInStock'],
       ),
       name: product['name']?.toString() ?? '',
       unit: product['unit']?.toString() ?? 'قطعة',
-      price: productPrice,
-      oldPrice: productOldPrice,
+      price: sellingPrice,
       quantity: quantity,
       imageUrl: product['image']?.toString(),
     );
@@ -78,14 +57,10 @@ class CartItem {
       name: name,
       unit: unit,
       price: price,
-      oldPrice: oldPrice,
       quantity: quantity ?? this.quantity,
       imageUrl: imageUrl,
       productId: productId,
       categoryId: categoryId,
-      discountId: discountId,
-      discountName: discountName,
-      discountScope: discountScope,
       maxQuantity: maxQuantity,
     );
   }

@@ -39,6 +39,10 @@ dependencies:
   dio: ^5.9.2
   flutter_bloc: ^9.1.1
   flutter_secure_storage: ^10.1.0
+  firebase_core: ^4.12.1
+  firebase_messaging: ^16.4.3
+  flutter_local_notifications: ^22.2.0
+  socket_io_client: ^3.1.2
 
 dev_dependencies:
   flutter_test:

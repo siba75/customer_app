@@ -12,11 +12,21 @@ class NotificationsApi {
   Future<NotificationsPage> getMyNotifications({
     int limit = 10,
     int offset = 0,
+    bool unreadOnly = false,
   }) async {
     try {
+      final queryParameters = <String, dynamic>{
+        'limit': limit,
+        'offset': offset,
+      };
+
+      if (unreadOnly) {
+        queryParameters['unreadOnly'] = true;
+      }
+
       final response = await _dio.get(
         ApiConfig.notificationsMeEndpoint,
-        queryParameters: {'limit': limit, 'offset': offset},
+        queryParameters: queryParameters,
         options: await _authOptions(),
       );
 
@@ -34,13 +44,34 @@ class NotificationsApi {
     return _updateReadStatus(id: id, isRead: false);
   }
 
+  Future<void> registerDeviceToken({
+    required String token,
+    String platform = 'android',
+  }) async {
+    try {
+      await _dio.post(
+        ApiConfig.notificationDeviceTokenEndpoint,
+        data: {
+          'token': token,
+          'fcmToken': token,
+          'deviceToken': token,
+          'platform': platform,
+        },
+        options: await _authOptions(),
+      );
+    } on DioException catch (e) {
+      throw Exception(_readErrorMessage(e) ?? 'تعذر تسجيل جهاز الإشعارات.');
+    }
+  }
+
   Future<CustomerNotification?> _updateReadStatus({
     required String id,
     required bool isRead,
   }) async {
     try {
+      final action = isRead ? 'read' : 'unread';
       final response = await _dio.patch(
-        '${ApiConfig.notificationsEndpoint}/$id/${isRead ? 'read' : 'unread'}',
+        '${ApiConfig.notificationsEndpoint}/$id/$action',
         options: await _authOptions(),
       );
 

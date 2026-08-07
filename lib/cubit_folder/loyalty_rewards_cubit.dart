@@ -73,13 +73,18 @@ class LoyaltyRewardsCubit extends Cubit<LoyaltyRewardsState> {
         currentState.copyWith(
           errorMessage: 'نقاطك غير كافية لاستبدال هذه المكافأة.',
           clearMessages: true,
+          clearLastRedemption: true,
         ),
       );
       return;
     }
 
     emit(
-      currentState.copyWith(redeemingOfferId: reward.id, clearMessages: true),
+      currentState.copyWith(
+        redeemingOfferId: reward.id,
+        clearMessages: true,
+        clearLastRedemption: true,
+      ),
     );
 
     try {
@@ -90,8 +95,9 @@ class LoyaltyRewardsCubit extends Cubit<LoyaltyRewardsState> {
         currentState.copyWith(
           rewards: rewards,
           clearRedeemingOffer: true,
+          lastRedemption: redemption,
           successMessage:
-              'تم استبدال ${redemption.pointsSpent} نقطة وإنشاء الخصم بنجاح.',
+              'تم تحويل ${redemption.pointsSpent} نقطة إلى خصم جاهز للاستخدام عند إتمام الطلب.',
           clearMessages: true,
         ),
       );
@@ -105,6 +111,7 @@ class LoyaltyRewardsCubit extends Cubit<LoyaltyRewardsState> {
             fallback: 'تعذر استبدال المكافأة.',
           ),
           clearMessages: true,
+          clearLastRedemption: true,
         ),
       );
     }

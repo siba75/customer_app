@@ -25,51 +25,27 @@ class CartState {
     return items.fold(0, (sum, item) => sum + item.originalTotal);
   }
 
-  double get delivery => subtotal >= 30 || subtotal == 0 ? 0 : 5;
-
-  double get itemDiscount {
-    return items.fold(0, (sum, item) => sum + item.lineDiscount);
-  }
-
   double get invoiceDiscount {
     return discountCalculation?.discountAmount ?? 0;
   }
 
-  double get discount => invoiceDiscount > 0 ? invoiceDiscount : itemDiscount;
+  double get discount => invoiceDiscount;
 
   String? get discountName {
     final invoiceDiscountName = discountCalculation?.discountName;
     if (invoiceDiscountName != null && invoiceDiscountName.isNotEmpty) {
       return invoiceDiscountName;
     }
-
-    final itemDiscountNames = items
-        .where((item) => item.hasDiscount)
-        .map((item) => item.discountName)
-        .whereType<String>()
-        .where((name) => name.isNotEmpty)
-        .toSet();
-
-    if (itemDiscountNames.length == 1) return itemDiscountNames.first;
-    if (itemDiscount > 0) return 'عروض المنتجات';
     return null;
   }
 
-  double get total => subtotal + delivery - discount;
+  double get total => (subtotal - discount).clamp(0, double.infinity).toDouble();
 
   int? get orderDiscountId {
     final invoiceDiscountId = discountCalculation?.discountId;
     if (invoiceDiscountId != null && invoiceDiscountId > 0) {
       return invoiceDiscountId;
     }
-
-    final itemDiscountIds = items
-        .where((item) => item.hasDiscount)
-        .map((item) => item.discountId)
-        .whereType<int>()
-        .toSet();
-
-    if (itemDiscountIds.length == 1) return itemDiscountIds.first;
     return null;
   }
 

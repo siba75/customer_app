@@ -62,53 +62,28 @@ class _ProductThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = item.imageUrl;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 86,
-          height: 96,
-          decoration: BoxDecoration(
-            color: context.appSoftPrimary,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: AuthenticatedProductImage(
-            imageUrl: imageUrl,
-            fit: BoxFit.cover,
-            placeholderBuilder: (_) => const Icon(
-              Icons.shopping_bag_outlined,
-              color: AppColors.primary,
-              size: 36,
-            ),
-            errorBuilder: (_) => const Icon(
-              Icons.image_not_supported_outlined,
-              color: AppColors.primary,
-              size: 34,
-            ),
-          ),
+    return Container(
+      width: 86,
+      height: 96,
+      decoration: BoxDecoration(
+        color: context.appSoftPrimary,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: AuthenticatedProductImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        placeholderBuilder: (_) => const Icon(
+          Icons.shopping_bag_outlined,
+          color: AppColors.primary,
+          size: 36,
         ),
-        if (item.hasDiscount)
-          Positioned(
-            top: -7,
-            right: -7,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.secondary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'عرض',
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ),
-      ],
+        errorBuilder: (_) => const Icon(
+          Icons.image_not_supported_outlined,
+          color: AppColors.primary,
+          size: 34,
+        ),
+      ),
     );
   }
 }
@@ -138,27 +113,12 @@ class _ProductInfo extends StatelessWidget {
           style: AppTypography.bodySmall.copyWith(color: context.appMutedText),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(
-              '${item.price.toStringAsFixed(2)} ل.س',
-              style: AppTypography.titleMedium.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            if (item.hasDiscount)
-              Text(
-                '${item.oldPrice!.toStringAsFixed(2)} ل.س',
-                style: AppTypography.bodySmall.copyWith(
-                  color: context.appMutedText,
-                  decoration: TextDecoration.lineThrough,
-                ),
-              ),
-          ],
+        Text(
+          '${item.price.toStringAsFixed(2)} ل.س',
+          style: AppTypography.titleMedium.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 12),
         Text(

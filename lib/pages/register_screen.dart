@@ -1,4 +1,5 @@
 import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/core/services/notification_service.dart';
 import 'package:customer_app/widgets/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -222,10 +223,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 24),
 
                   BlocConsumer<RegisterCubit, RegisterState>(
-                    listener: (context, state) {
+                    listener: (context, state) async {
                       if (state is RegisterSuccess) {
                         if (state.token != null) {
-                          SecureStorage.write('auth_token', state.token!);
+                          await SecureStorage.write('auth_token', state.token!);
+                          await NotificationService.prepareForSignedInUser();
                         }
 
                         showCustomSnackBar(

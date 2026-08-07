@@ -20,14 +20,10 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final price = _toDouble(product['price']);
-    final oldPrice = product['old_price'] == null
-        ? null
-        : _toDouble(product['old_price']);
-    final hasDiscount = oldPrice != null && oldPrice - price >= 0.01;
+    final discountName = product['discount_name']?.toString();
+    final discountLabel = _discountLabel(product);
+    final hasDiscount = discountName != null && discountName.isNotEmpty;
     final imageUrl = product['image']?.toString();
-    final discountPercent = hasDiscount
-        ? (((oldPrice - price) / oldPrice) * 100).round()
-        : 0;
 
     return GestureDetector(
       onTap: onTap,
@@ -91,7 +87,6 @@ class ProductCard extends StatelessWidget {
                 ),
               ),
 
-              // شارة الخصم
               if (hasDiscount)
                 Positioned(
                   top: 12,
@@ -113,35 +108,17 @@ class ProductCard extends StatelessWidget {
                       ],
                     ),
                     child: Text(
-                      '-$discountPercent%',
+                      discountLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
-
-              // أيقونة المفضلة (اختيارية)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: CircleAvatar(
-                  backgroundColor: Colors.white.withValues(alpha: 0.9),
-                  radius: 18,
-                  child: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.favorite_border,
-                      size: 16,
-                      color: AppColors.error,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ),
-              ),
 
               // معلومات المنتج في الأسفل
               Positioned(
@@ -181,14 +158,6 @@ class ProductCard extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (hasDiscount)
-                                Text(
-                                  '${oldPrice.toStringAsFixed(2)} ل.س',
-                                  style: AppTypography.bodySmall.copyWith(
-                                    decoration: TextDecoration.lineThrough,
-                                    color: Colors.white60,
-                                  ),
-                                ),
                               Text(
                                 '${price.toStringAsFixed(2)} ل.س',
                                 style: AppTypography.titleMedium.copyWith(
@@ -242,5 +211,21 @@ class ProductCard extends StatelessWidget {
     if (value is double) return value;
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _discountLabel(Map<String, dynamic> product) {
+    final label = product['discount_label']?.toString().trim();
+    if (label != null && label.isNotEmpty) return label;
+
+    final type = product['discount_type']?.toString().toUpperCase();
+    final value = _toDouble(product['discount_value']);
+    if (value <= 0) return 'خصم متاح';
+
+    final formatted = value == value.roundToDouble()
+        ? value.toInt().toString()
+        : value.toStringAsFixed(2);
+    if (type == 'PERCENTAGE') return '$formatted%';
+    if (type == 'FIXED_AMOUNT') return '$formatted ل.س';
+    return 'خصم متاح';
   }
 }

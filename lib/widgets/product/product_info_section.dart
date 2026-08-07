@@ -42,6 +42,10 @@ class _ProductTitleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final discountName = product['discount_name']?.toString().trim();
+    final discountLabel = product['discount_label']?.toString().trim();
+    final hasDiscount = discountName != null && discountName.isNotEmpty;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -96,6 +100,77 @@ class _ProductTitleCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           ProductPriceRow(product: product),
+          if (hasDiscount) ...[
+            const SizedBox(height: 12),
+            _ProductDiscountNotice(
+              name: discountName,
+              label: discountLabel == null || discountLabel.isEmpty
+                  ? 'خصم متاح'
+                  : discountLabel,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductDiscountNotice extends StatelessWidget {
+  final String name;
+  final String label;
+
+  const _ProductDiscountNotice({required this.name, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.local_offer_outlined,
+              color: AppColors.success,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: context.appText,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'قيمة العرض: $label، ويطبق عند إتمام الطلب إذا كان أفضل خصم متاح.',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: context.appMutedText,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

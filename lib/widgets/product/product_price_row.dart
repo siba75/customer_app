@@ -1,7 +1,6 @@
 // lib/widgets/product/product_price_row.dart
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
-import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:flutter/material.dart';
 
 class ProductPriceRow extends StatelessWidget {
@@ -13,10 +12,9 @@ class ProductPriceRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isTablet = MediaQuery.of(context).size.width >= 600;
     final price = _toDouble(product['price']);
-    final oldPrice = product['old_price'] == null
-        ? null
-        : _toDouble(product['old_price']);
-    final hasDiscount = oldPrice != null && oldPrice - price >= 0.01;
+    final discountName = product['discount_name']?.toString();
+    final discountLabel = _discountLabel(product);
+    final hasDiscount = discountName != null && discountName.isNotEmpty;
 
     return Row(
       children: [
@@ -37,18 +35,26 @@ class ProductPriceRow extends StatelessWidget {
                           fontWeight: FontWeight.w900,
                         ),
               ),
-              if (hasDiscount)
-                Text(
-                  '${oldPrice.toStringAsFixed(2)} ل.س',
-                  style: AppTypography.bodyMedium.copyWith(
-                    decoration: TextDecoration.lineThrough,
-                    color: context.appMutedText,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
             ],
           ),
         ),
+        if (hasDiscount) ...[
+          Container(
+            margin: const EdgeInsetsDirectional.only(end: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              discountLabel,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.success,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
@@ -71,5 +77,21 @@ class ProductPriceRow extends StatelessWidget {
     if (value is double) return value;
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _discountLabel(Map<String, dynamic> product) {
+    final label = product['discount_label']?.toString().trim();
+    if (label != null && label.isNotEmpty) return label;
+
+    final type = product['discount_type']?.toString().toUpperCase();
+    final value = _toDouble(product['discount_value']);
+    if (value <= 0) return 'خصم متاح';
+
+    final formatted = value == value.roundToDouble()
+        ? value.toInt().toString()
+        : value.toStringAsFixed(2);
+    if (type == 'PERCENTAGE') return '$formatted%';
+    if (type == 'FIXED_AMOUNT') return '$formatted ل.س';
+    return 'خصم متاح';
   }
 }

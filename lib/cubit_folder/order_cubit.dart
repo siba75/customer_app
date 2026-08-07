@@ -27,7 +27,6 @@ class OrderCubit extends Cubit<OrderState> {
   Future<Order> createOrder({
     required List<CartItem> items,
     int? discountId,
-    int loyaltyPointsUsed = 0,
     String? deliveryAddress,
   }) async {
     emit(state.copyWith(isCreating: true));
@@ -36,7 +35,6 @@ class OrderCubit extends Cubit<OrderState> {
       final order = await _api.createOrder(
         items: items,
         discountId: discountId,
-        loyaltyPointsUsed: loyaltyPointsUsed,
         deliveryAddress: deliveryAddress,
       );
       emit(state.copyWith(orders: [order, ...state.orders], isCreating: false));

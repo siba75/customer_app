@@ -20,6 +20,7 @@ class LoyaltyRewardsSuccess extends LoyaltyRewardsState {
   final String? redeemingOfferId;
   final String? successMessage;
   final String? errorMessage;
+  final LoyaltyRedemptionModel? lastRedemption;
 
   const LoyaltyRewardsSuccess({
     required this.rewards,
@@ -28,6 +29,7 @@ class LoyaltyRewardsSuccess extends LoyaltyRewardsState {
     this.redeemingOfferId,
     this.successMessage,
     this.errorMessage,
+    this.lastRedemption,
   });
 
   LoyaltyRewardsSuccess copyWith({
@@ -37,8 +39,10 @@ class LoyaltyRewardsSuccess extends LoyaltyRewardsState {
     String? redeemingOfferId,
     String? successMessage,
     String? errorMessage,
+    LoyaltyRedemptionModel? lastRedemption,
     bool clearRedeemingOffer = false,
     bool clearMessages = false,
+    bool clearLastRedemption = false,
   }) {
     return LoyaltyRewardsSuccess(
       rewards: rewards ?? this.rewards,
@@ -53,6 +57,9 @@ class LoyaltyRewardsSuccess extends LoyaltyRewardsState {
       errorMessage: clearMessages
           ? errorMessage
           : errorMessage ?? this.errorMessage,
+      lastRedemption: clearLastRedemption
+          ? null
+          : lastRedemption ?? this.lastRedemption,
     );
   }
 }
