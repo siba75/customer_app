@@ -1,4 +1,5 @@
 import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/services/notification_service.dart';
 import 'package:customer_app/widgets/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'إنشاء حساب جديد',
+                    context.tr('إنشاء حساب جديد'),
                     textAlign: TextAlign.center,
                     style: AppTypography.headlineMedium.copyWith(
                       color: context.appText,
@@ -100,12 +101,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextFormField(
                     controller: _nameController,
                     textAlign: TextAlign.right,
-                    decoration: const InputDecoration(
-                      labelText: 'الاسم الكامل',
-                      prefixIcon: Icon(Icons.person_outline),
+                    decoration: InputDecoration(
+                      labelText: context.tr('الاسم الكامل'),
+                      prefixIcon: const Icon(Icons.person_outline),
                     ),
                     validator: (v) =>
-                        (v?.isEmpty ?? true) ? 'الرجاء إدخال الاسم' : null,
+                        (v?.isEmpty ?? true)
+                        ? context.tr('الرجاء إدخال الاسم')
+                        : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -114,12 +117,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textAlign: TextAlign.right,
-                    decoration: const InputDecoration(
-                      labelText: 'البريد الإلكتروني',
-                      prefixIcon: Icon(Icons.email_outlined),
+                    decoration: InputDecoration(
+                      labelText: context.tr('البريد الإلكتروني'),
+                      prefixIcon: const Icon(Icons.email_outlined),
                     ),
                     validator: (v) =>
-                        (v?.isEmpty ?? true) ? 'الرجاء إدخال البريد' : null,
+                        (v?.isEmpty ?? true)
+                        ? context.tr('الرجاء إدخال البريد')
+                        : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -128,12 +133,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                     textAlign: TextAlign.right,
-                    decoration: const InputDecoration(
-                      labelText: 'رقم الهاتف',
-                      prefixIcon: Icon(Icons.phone_outlined),
+                    decoration: InputDecoration(
+                      labelText: context.tr('رقم الهاتف'),
+                      prefixIcon: const Icon(Icons.phone_outlined),
                     ),
                     validator: (v) =>
-                        (v?.isEmpty ?? true) ? 'الرجاء إدخال رقم الهاتف' : null,
+                        (v?.isEmpty ?? true)
+                        ? context.tr('الرجاء إدخال رقم الهاتف')
+                        : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -145,7 +152,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         obscureText: _obscurePassword,
                         textAlign: TextAlign.right,
                         decoration: InputDecoration(
-                          labelText: 'كلمة المرور',
+                          labelText: context.tr('كلمة المرور'),
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -160,10 +167,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         validator: (v) {
                           if ((v?.isEmpty ?? true)) {
-                            return 'الرجاء إدخال كلمة المرور';
+                            return context.tr('الرجاء إدخال كلمة المرور');
                           }
                           if (v!.length < 8) {
-                            return 'كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل';
+                            return context.tr(
+                              'كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل',
+                            );
                           }
                           return null;
                         },
@@ -180,7 +189,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         obscureText: _obscureConfirmPassword,
                         textAlign: TextAlign.right,
                         decoration: InputDecoration(
-                          labelText: 'تأكيد كلمة المرور',
+                          labelText: context.tr('تأكيد كلمة المرور'),
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -196,10 +205,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         validator: (v) {
                           if ((v?.isEmpty ?? true)) {
-                            return 'الرجاء تأكيد كلمة المرور';
+                            return context.tr('الرجاء تأكيد كلمة المرور');
                           }
                           if (_passwordController.text != v) {
-                            return 'كلمتا المرور غير متطابقتين';
+                            return context.tr('كلمتا المرور غير متطابقتين');
                           }
                           return null;
                         },
@@ -213,12 +222,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _nationalIdController,
                     keyboardType: TextInputType.text,
                     textAlign: TextAlign.right,
-                    decoration: const InputDecoration(
-                      labelText: 'رقم الهوية',
-                      prefixIcon: Icon(Icons.card_membership_outlined),
+                    decoration: InputDecoration(
+                      labelText: context.tr('رقم الهوية'),
+                      prefixIcon: const Icon(Icons.card_membership_outlined),
                     ),
                     validator: (v) =>
-                        (v?.isEmpty ?? true) ? 'الرجاء إدخال رقم الهوية' : null,
+                        (v?.isEmpty ?? true)
+                        ? context.tr('الرجاء إدخال رقم الهوية')
+                        : null,
                   ),
                   const SizedBox(height: 24),
 
@@ -226,7 +237,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     listener: (context, state) async {
                       if (state is RegisterSuccess) {
                         if (state.token != null) {
-                          await SecureStorage.write('auth_token', state.token!);
+                          await SecureStorage.write(
+                            SecureStorage.authTokenKey,
+                            state.token!,
+                          );
                           await NotificationService.prepareForSignedInUser();
                         }
 
@@ -267,7 +281,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         _confirmPasswordController.text) {
                                       showCustomSnackBar(
                                         context,
-                                        'كلمتا المرور غير متطابقتين',
+                                        context.tr('كلمتا المرور غير متطابقتين'),
                                         backgroundColor: AppColors.error,
                                       );
                                       return;
@@ -297,9 +311,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ? const CircularProgressIndicator(
                                   color: AppColors.white,
                                 )
-                              : const Text(
-                                  'إنشاء الحساب',
-                                  style: TextStyle(
+                              : Text(
+                                  context.tr('إنشاء الحساب'),
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     color: AppColors.white,
                                   ),
@@ -315,9 +329,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       context,
                       MaterialPageRoute(builder: (_) => const LoginScreen()),
                     ),
-                    child: const Text(
-                      'لديك حساب بالفعل؟ تسجيل الدخول',
-                      style: TextStyle(color: AppColors.primary),
+                    child: Text(
+                      context.tr('لديك حساب بالفعل؟ تسجيل الدخول'),
+                      style: const TextStyle(color: AppColors.primary),
                     ),
                   ),
                 ],

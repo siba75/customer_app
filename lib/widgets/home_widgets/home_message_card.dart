@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -26,7 +27,7 @@ class HomeMessageCard extends StatelessWidget {
             Icon(icon, color: AppColors.primary, size: 34),
             const SizedBox(height: 10),
             Text(
-              title,
+              context.tr(title),
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appMutedText,

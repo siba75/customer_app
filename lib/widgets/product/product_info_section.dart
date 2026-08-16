@@ -1,4 +1,5 @@
 // lib/widgets/product/product_info_section.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -87,9 +88,9 @@ class _ProductTitleCard extends StatelessWidget {
                   color: AppColors.success.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Text(
-                  'متوفر',
-                  style: TextStyle(
+                child: Text(
+                  context.tr('متوفر'),
+                  style: const TextStyle(
                     color: AppColors.success,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -105,7 +106,7 @@ class _ProductTitleCard extends StatelessWidget {
             _ProductDiscountNotice(
               name: discountName,
               label: discountLabel == null || discountLabel.isEmpty
-                  ? 'خصم متاح'
+                  ? context.tr('خصم متاح')
                   : discountLabel,
             ),
           ],
@@ -162,7 +163,10 @@ class _ProductDiscountNotice extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'قيمة العرض: $label، ويطبق عند إتمام الطلب إذا كان أفضل خصم متاح.',
+                  context.trArgs(
+                    'قيمة العرض: {label}، ويطبق عند إتمام الطلب إذا كان أفضل خصم متاح.',
+                    {'label': label},
+                  ),
                   style: AppTypography.bodySmall.copyWith(
                     color: context.appMutedText,
                     height: 1.35,
@@ -218,7 +222,7 @@ class _DescriptionCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                'الوصف',
+                context.tr('الوصف'),
                 style:
                     (isTablet
                             ? AppTypography.titleLarge
@@ -232,7 +236,7 @@ class _DescriptionCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            product['description'] ?? 'لا يوجد وصف متاح لهذا المنتج.',
+            product['description'] ?? context.tr('لا يوجد وصف متاح لهذا المنتج.'),
             style: AppTypography.bodyLarge.copyWith(
               color: context.appMutedText,
               height: 1.65,

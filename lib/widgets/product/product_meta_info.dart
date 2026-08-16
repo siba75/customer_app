@@ -1,4 +1,5 @@
 // lib/widgets/product/product_meta_info.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -91,7 +92,7 @@ class _MetaRow extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Text(
-          '${data.label}:',
+          '${context.tr(data.label)}:',
           style: AppTypography.bodyMedium.copyWith(
             color: context.appMutedText,
             fontWeight: FontWeight.w700,
@@ -100,7 +101,7 @@ class _MetaRow extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            data.value,
+            context.tr(data.value),
             style: AppTypography.bodyMedium.copyWith(
               color: context.appText,
               fontWeight: FontWeight.w700,

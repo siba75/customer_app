@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/helpers/app_error_messages.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -29,7 +30,7 @@ class HomeProductsSection extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
             child: Text(
-              state.selectedCategory?.name ?? 'المنتجات',
+              state.selectedCategory?.name ?? context.tr('المنتجات'),
               style: AppTypography.titleMedium.copyWith(
                 color: context.appText,
                 fontWeight: FontWeight.w900,
@@ -38,12 +39,12 @@ class HomeProductsSection extends StatelessWidget {
             ),
           ),
         ),
-        ..._buildProductSlivers(),
+        ..._buildProductSlivers(context),
       ],
     );
   }
 
-  List<Widget> _buildProductSlivers() {
+  List<Widget> _buildProductSlivers(BuildContext context) {
     if (state.isLoading) {
       return const [_ProductsSkeleton()];
     }
@@ -71,8 +72,8 @@ class HomeProductsSection extends StatelessWidget {
             title: AppErrorMessages.friendly(
               state.errorMessage,
               fallback: query.isEmpty
-                  ? 'لا توجد منتجات ضمن هذا التصنيف'
-                  : 'لا توجد نتائج مطابقة للبحث',
+                  ? context.tr('لا توجد منتجات ضمن هذا التصنيف')
+                  : context.tr('لا توجد نتائج مطابقة للبحث'),
             ),
           ),
         ),

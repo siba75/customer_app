@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -80,9 +81,11 @@ class _BannerContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = banner.title.trim().isEmpty ? 'إعلان' : banner.title.trim();
+    final title = banner.title.trim().isEmpty
+        ? context.tr('إعلان')
+        : banner.title.trim();
     final description = banner.description.trim().isEmpty
-        ? 'لا يوجد وصف متاح لهذا الإعلان.'
+        ? context.tr('لا يوجد وصف متاح لهذا الإعلان.')
         : banner.description.trim();
 
     return Positioned.fill(
@@ -95,7 +98,7 @@ class _BannerContent extends StatelessWidget {
               children: [
                 _InfoPill(
                   icon: banner.icon,
-                  label: banner.placementLabel,
+                    label: context.tr(banner.placementLabel),
                   color: AppColors.white.withValues(alpha: 0.18),
                   textColor: AppColors.white,
                 ),
@@ -103,7 +106,7 @@ class _BannerContent extends StatelessWidget {
                 Flexible(
                   child: _InfoPill(
                     icon: Icons.circle,
-                    label: banner.badge,
+                    label: context.tr(banner.badge),
                     color: banner.statusColor.withValues(alpha: 0.18),
                     textColor: AppColors.white,
                     iconColor: banner.statusColor,
@@ -181,7 +184,7 @@ class _ActionHint extends StatelessWidget {
           ),
           const SizedBox(width: 5),
           Text(
-            'تفاصيل',
+            context.tr('تفاصيل'),
             style: AppTypography.bodySmall.copyWith(
               color: AppColors.white,
               fontWeight: FontWeight.w900,
@@ -284,7 +287,7 @@ class _AdDetailsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: Directionality.of(context),
       child: Container(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.82,
@@ -328,7 +331,7 @@ class _AdDetailsSheet extends StatelessWidget {
                       children: [
                         Text(
                           banner.title.trim().isEmpty
-                              ? 'إعلان'
+                              ? context.tr('إعلان')
                               : banner.title.trim(),
                           style: AppTypography.titleLarge.copyWith(
                             color: context.appText,
@@ -337,16 +340,19 @@ class _AdDetailsSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          banner.placementLabel,
+                          context.tr(banner.placementLabel),
                           style: AppTypography.bodySmall.copyWith(
-                            color: context.appSubtext,
+                            color: context.appMutedText,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  _StatusDot(color: banner.statusColor, label: banner.badge),
+                  _StatusDot(
+                    color: banner.statusColor,
+                    label: context.tr(banner.badge),
+                  ),
                 ],
               ),
               const SizedBox(height: 18),
@@ -373,22 +379,25 @@ class _AdDetailsSheet extends StatelessWidget {
               _DetailBlock(
                 title: 'الوصف',
                 value: banner.description.trim().isEmpty
-                    ? 'لا يوجد وصف متاح لهذا الإعلان.'
+                    ? context.tr('لا يوجد وصف متاح لهذا الإعلان.')
                     : banner.description.trim(),
               ),
               _DetailBlock(title: 'رقم الإعلان', value: '#${banner.id}'),
               _DetailBlock(title: 'بداية الإعلان', value: banner.startDateLabel),
               _DetailBlock(title: 'نهاية الإعلان', value: banner.endDateLabel),
-              _DetailBlock(title: 'مكان الظهور', value: banner.placementLabel),
-              _DetailBlock(title: 'الحالة', value: banner.badge),
+              _DetailBlock(
+                title: 'مكان الظهور',
+                value: context.tr(banner.placementLabel),
+              ),
+              _DetailBlock(title: 'الحالة', value: context.tr(banner.badge)),
               _DetailBlock(title: 'تاريخ الإنشاء', value: banner.createdAtLabel),
               _DetailBlock(title: 'آخر تعديل', value: banner.updatedAtLabel),
               if (banner.hasLink)
                 _LinkBlock(link: banner.linkUrl!)
               else
-                const _DetailBlock(
+                _DetailBlock(
                   title: 'الرابط',
-                  value: 'لا يوجد رابط مرفق لهذا الإعلان.',
+                  value: context.tr('لا يوجد رابط مرفق لهذا الإعلان.'),
                 ),
             ],
           ),
@@ -451,15 +460,15 @@ class _DetailBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
+            context.tr(title),
             style: AppTypography.bodySmall.copyWith(
-              color: context.appSubtext,
+              color: context.appMutedText,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            value,
+            context.tr(value),
             style: AppTypography.bodyMedium.copyWith(
               color: context.appText,
               fontWeight: FontWeight.w800,
@@ -484,7 +493,7 @@ class _LinkBlock extends StatelessWidget {
         await Clipboard.setData(ClipboardData(text: link));
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم نسخ رابط الإعلان')),
+          SnackBar(content: Text(context.tr('تم نسخ رابط الإعلان'))),
         );
       },
       borderRadius: BorderRadius.circular(16),

@@ -1,4 +1,5 @@
 // lib/widgets/orders/order_details_sheet.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -142,7 +143,10 @@ class OrderDetailsSheet extends StatelessWidget {
             ),
           ],
         ),
-        OrderStatusChip(text: order.statusText, color: order.statusColor),
+        OrderStatusChip(
+          text: context.tr(order.statusText),
+          color: order.statusColor,
+        ),
       ],
     );
   }
@@ -161,7 +165,7 @@ class OrderDetailsSheet extends StatelessWidget {
             Icon(icon, size: 15, color: AppColors.primary),
             const SizedBox(width: 8),
             Text(
-              title,
+              context.tr(title),
               style: AppTypography.titleSmall.copyWith(
                 color: context.appText,
                 fontWeight: FontWeight.bold,
@@ -193,21 +197,27 @@ class OrderDetailsSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'رقم التتبع: ${order.trackingNumber}',
+            context.trArgs('رقم التتبع: {number}', {
+              'number': order.trackingNumber,
+            }),
             style: AppTypography.bodyMedium.copyWith(
               color: context.appMutedText,
             ),
           ),
           if (order.estimatedDelivery != null)
             Text(
-              'موعد التوصيل المتوقع: ${order.estimatedDelivery}',
+              context.trArgs('موعد التوصيل المتوقع: {date}', {
+                'date': order.estimatedDelivery,
+              }),
               style: AppTypography.bodySmall.copyWith(
                 color: context.appMutedText,
               ),
             ),
           if (order.deliveredAt != null)
             Text(
-              'تم التوصيل في: ${order.deliveredAt}',
+              context.trArgs('تم التوصيل في: {date}', {
+                'date': order.deliveredAt,
+              }),
               style: AppTypography.bodySmall.copyWith(
                 color: context.appMutedText,
               ),
@@ -265,7 +275,9 @@ class OrderDetailsSheet extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'الكمية: ${item.quantity}',
+                      context.trArgs('الكمية: {quantity}', {
+                        'quantity': item.quantity,
+                      }),
                       style: AppTypography.bodySmall.copyWith(
                         color: context.appMutedText,
                       ),
@@ -274,7 +286,7 @@ class OrderDetailsSheet extends StatelessWidget {
                 ),
               ),
               Text(
-                '${item.total.toStringAsFixed(2)}  ل.س',
+                context.money(item.total),
                 style: AppTypography.titleMedium.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,
@@ -304,7 +316,9 @@ class OrderDetailsSheet extends StatelessWidget {
             context,
             'سعر المنتجات',
             order.subtotal,
-            helper: '${order.items.length} منتجات',
+            helper: context.trArgs('{count} منتجات', {
+              'count': order.items.length,
+            }),
           ),
           if (order.delivery > 0) ...[
             const SizedBox(height: 8),
@@ -314,7 +328,9 @@ class OrderDetailsSheet extends StatelessWidget {
             const SizedBox(height: 8),
             _buildPriceRow(
               context,
-              hasDiscountName ? 'الخصم - ${order.appliedDiscountName}' : 'الخصم',
+              hasDiscountName
+                  ? '${context.tr('الخصم')} - ${order.appliedDiscountName}'
+                  : context.tr('الخصم'),
               -order.discount,
               valueColor: AppColors.success,
             ),
@@ -323,8 +339,10 @@ class OrderDetailsSheet extends StatelessWidget {
             _buildTextRow(
               context,
               'الخصم',
-              hasDiscountName ? order.appliedDiscountName! : 'مطبق على الطلب',
-              helper: 'قيمة الخصم غير مرجعة من الخادم لهذا الطلب.',
+              hasDiscountName
+                  ? order.appliedDiscountName!
+                  : context.tr('مطبق على الطلب'),
+              helper: context.tr('قيمة الخصم غير مرجعة من الخادم لهذا الطلب.'),
             ),
           ],
           Divider(height: 24, color: context.appSoftBorder),
@@ -348,7 +366,7 @@ class OrderDetailsSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
+            context.tr(label),
             style: isTotal
                 ? AppTypography.titleMedium.copyWith(
                     color: context.appText,
@@ -379,7 +397,7 @@ class OrderDetailsSheet extends StatelessWidget {
                 if (helper != null && helper.isNotEmpty) ...[
                   const SizedBox(height: 3),
                   Text(
-                    helper,
+                  context.tr(helper),
                     textAlign: TextAlign.end,
                     style: AppTypography.bodySmall.copyWith(
                       color: context.appMutedText,
@@ -403,8 +421,8 @@ class OrderDetailsSheet extends StatelessWidget {
     Color? valueColor,
   }) {
     final formattedAmount = amount < 0
-        ? '-${amount.abs().toStringAsFixed(2)} ل.س'
-        : '${amount.toStringAsFixed(2)} ل.س';
+        ? '-${context.money(amount.abs())}'
+        : context.money(amount);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -417,7 +435,7 @@ class OrderDetailsSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label,
+                  context.tr(label),
                   style: isTotal
                       ? AppTypography.titleMedium.copyWith(
                           color: context.appText,
@@ -430,7 +448,7 @@ class OrderDetailsSheet extends StatelessWidget {
                 if (helper != null && helper.isNotEmpty) ...[
                   const SizedBox(height: 3),
                   Text(
-                    helper,
+                    context.tr(helper),
                     style: AppTypography.bodySmall.copyWith(
                       color: context.appMutedText,
                     ),
@@ -486,7 +504,7 @@ class OrderDetailsSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'إجمالي المبلغ للدفع',
+                  context.tr('إجمالي المبلغ للدفع'),
                   style: AppTypography.bodyMedium.copyWith(
                     color: context.appMutedText,
                     fontWeight: FontWeight.w700,
@@ -494,7 +512,7 @@ class OrderDetailsSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${total.toStringAsFixed(2)} ل.س',
+                  context.money(total),
                   style: AppTypography.headlineSmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w900,
@@ -542,7 +560,10 @@ class OrderDetailsSheet extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(vertical: 14),
         ),
-        child: Text('إغلاق', style: TextStyle(color: context.appMutedText)),
+        child: Text(
+          context.tr('إغلاق'),
+          style: TextStyle(color: context.appMutedText),
+        ),
       ),
     );
   }

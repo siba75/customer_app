@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -58,14 +59,14 @@ class _LoyaltyRewardsView extends StatelessWidget {
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: const Text('مكافآت الولاء'),
+        title: Text(context.tr('مكافآت الولاء')),
         actions: [
           BlocBuilder<LoyaltyRewardsCubit, LoyaltyRewardsState>(
             builder: (context, state) {
               final isLoading = state is LoyaltyRewardsLoading;
 
               return IconButton(
-                tooltip: 'تحديث المكافآت',
+                tooltip: context.tr('تحديث المكافآت'),
                 onPressed: isLoading
                     ? null
                     : context.read<LoyaltyRewardsCubit>().loadRewards,
@@ -225,7 +226,7 @@ class _RewardsIntro extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'بشو بتحب تستبدل نقاطك؟',
+                  context.tr('بشو بتحب تستبدل نقاطك؟'),
                   style: AppTypography.titleSmall.copyWith(
                     color: context.appText,
                     fontWeight: FontWeight.w900,
@@ -233,7 +234,9 @@ class _RewardsIntro extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'اختاري عرضاً واضحاً، أكدي الاستبدال، وبعدها يتحول العرض إلى خصم جاهز لإتمام الطلب.',
+                  context.tr(
+                    'اختاري عرضاً واضحاً، أكدي الاستبدال، وبعدها يتحول العرض إلى خصم جاهز لإتمام الطلب.',
+                  ),
                   style: AppTypography.bodySmall.copyWith(
                     color: context.appMutedText,
                     height: 1.45,
@@ -293,9 +296,9 @@ class _LoyaltyPolicyHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'نقاط الولاء',
-                      style: TextStyle(
+                    Text(
+                      context.tr('نقاط الولاء'),
+                      style: const TextStyle(
                         color: AppColors.white,
                         fontSize: 19,
                         fontWeight: FontWeight.w900,
@@ -303,7 +306,7 @@ class _LoyaltyPolicyHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'استخدم نقاطك كخصم عند إتمام الطلب',
+                      context.tr('استخدم نقاطك كخصم عند إتمام الطلب'),
                       style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.white.withValues(alpha: 0.82),
                       ),
@@ -320,8 +323,10 @@ class _LoyaltyPolicyHeader extends StatelessWidget {
                 child: _PolicyTile(
                   label: 'كسب النقاط',
                   value: policy.pointsPerCurrency <= 0
-                      ? 'غير محدد'
-                      : '${_formatNumber(policy.pointsPerCurrency)} نقطة / ل.س',
+                      ? context.tr('غير محدد')
+                      : context.trArgs('{points} نقطة / ل.س', {
+                          'points': _formatNumber(policy.pointsPerCurrency),
+                        }),
                 ),
               ),
               const SizedBox(width: 10),
@@ -329,8 +334,8 @@ class _LoyaltyPolicyHeader extends StatelessWidget {
                 child: _PolicyTile(
                   label: 'قيمة النقطة',
                   value: policy.currencyPerPoint <= 0
-                      ? 'غير محدد'
-                      : '${_formatNumber(policy.currencyPerPoint)} ل.س',
+                      ? context.tr('غير محدد')
+                      : context.money(policy.currencyPerPoint),
                 ),
               ),
             ],
@@ -364,7 +369,7 @@ class _PolicyTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
+            context.tr(label),
             style: AppTypography.bodySmall.copyWith(
               color: AppColors.white.withValues(alpha: 0.78),
             ),
@@ -406,7 +411,7 @@ class _RedeemConfirmationSheet extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'تأكيد استبدال النقاط',
+                  context.tr('تأكيد استبدال النقاط'),
                   style: AppTypography.titleLarge.copyWith(
                     color: context.appText,
                     fontWeight: FontWeight.w900,
@@ -417,7 +422,10 @@ class _RedeemConfirmationSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'سيتم خصم ${reward.pointsCost} نقطة من رصيدك مقابل ${reward.displayTitle}.',
+            context.trArgs(
+              'سيتم خصم {points} نقطة من رصيدك مقابل {reward}.',
+              {'points': reward.pointsCost, 'reward': reward.displayTitle},
+            ),
             style: AppTypography.bodyLarge.copyWith(
               color: context.appText,
               height: 1.45,
@@ -430,7 +438,7 @@ class _RedeemConfirmationSheet extends StatelessWidget {
               _SheetInfoRow('مدة الصلاحية', reward.displayValidity),
               _SheetInfoRow(
                 'عدد مرات الاستخدام',
-                reward.maxUses == null ? 'غير محدد' : '${reward.maxUses}',
+                reward.maxUses == null ? context.tr('غير محدد') : '${reward.maxUses}',
               ),
             ],
           ),
@@ -440,16 +448,16 @@ class _RedeemConfirmationSheet extends StatelessWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('إلغاء'),
+                  child: Text(context.tr('إلغاء')),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text(
-                    'تأكيد الاستبدال',
-                    style: TextStyle(color: AppColors.white),
+                  child: Text(
+                    context.tr('تأكيد الاستبدال'),
+                    style: const TextStyle(color: AppColors.white),
                   ),
                 ),
               ),
@@ -484,7 +492,7 @@ class _RedemptionResultSheet extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'صار عندك خصم جاهز',
+                  context.tr('صار عندك خصم جاهز'),
                   style: AppTypography.titleLarge.copyWith(
                     color: context.appText,
                     fontWeight: FontWeight.w900,
@@ -495,7 +503,10 @@ class _RedemptionResultSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'تم تحويل ${redemption.pointsSpent} نقطة إلى خصم يمكن تطبيقه عند إتمام الطلب.',
+            context.trArgs(
+              'تم تحويل {points} نقطة إلى خصم يمكن تطبيقه عند إتمام الطلب.',
+              {'points': redemption.pointsSpent},
+            ),
             style: AppTypography.bodyLarge.copyWith(
               color: context.appText,
               height: 1.45,
@@ -506,12 +517,14 @@ class _RedemptionResultSheet extends StatelessWidget {
             rows: [
               _SheetInfoRow(
                 'الخصم',
-                offer?.displayDiscountValue ?? 'جاهز للاستخدام',
+                offer?.displayDiscountValue ?? context.tr('جاهز للاستخدام'),
               ),
               _SheetInfoRow('رقم الخصم', '#${redemption.discountId}'),
               _SheetInfoRow(
                 'الاستخدام',
-                'سيظهر في إتمام الطلب ويطبقه النظام عندما يكون أفضل خصم متاح',
+                context.tr(
+                  'سيظهر في إتمام الطلب ويطبقه النظام عندما يكون أفضل خصم متاح',
+                ),
               ),
             ],
           ),
@@ -520,9 +533,9 @@ class _RedemptionResultSheet extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'تمام',
-                style: TextStyle(color: AppColors.white),
+              child: Text(
+                context.tr('تمام'),
+                style: const TextStyle(color: AppColors.white),
               ),
             ),
           ),
@@ -603,7 +616,7 @@ class _SheetInfoPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      row.label,
+                      context.tr(row.label),
                       style: AppTypography.bodyMedium.copyWith(
                         color: context.appMutedText,
                       ),
@@ -754,10 +767,10 @@ class _RewardCard extends StatelessWidget {
                   : const Icon(Icons.redeem_outlined, color: AppColors.white),
               label: Text(
                 isRedeeming
-                    ? 'جاري الاستبدال...'
+                    ? context.tr('جاري الاستبدال...')
                     : canRedeem
-                    ? 'استبدال المكافأة'
-                    : 'نقاطك غير كافية',
+                    ? context.tr('استبدال المكافأة')
+                    : context.tr('نقاطك غير كافية'),
                 style: const TextStyle(
                   color: AppColors.white,
                   fontWeight: FontWeight.w800,
@@ -808,7 +821,9 @@ class _RedeemBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(99),
       ),
       child: Text(
-        canRedeem ? 'متاحة للاستبدال' : 'غير متاحة حالياً',
+                canRedeem
+                    ? context.tr('متاحة للاستبدال')
+                    : context.tr('غير متاحة حالياً'),
         style: AppTypography.bodySmall.copyWith(
           color: color,
           fontWeight: FontWeight.w800,
@@ -845,7 +860,7 @@ class _RewardInfoTile extends StatelessWidget {
           Icon(icon, color: color, size: 20),
           const SizedBox(height: 8),
           Text(
-            label,
+            context.tr(label),
             style: AppTypography.bodySmall.copyWith(
               color: context.appMutedText,
             ),
@@ -878,7 +893,9 @@ class _ActiveStatus extends StatelessWidget {
         Icon(Icons.circle, size: 9, color: color),
         const SizedBox(width: 8),
         Text(
-          isActive ? 'المكافأة فعالة' : 'المكافأة غير فعالة',
+          isActive
+              ? context.tr('المكافأة فعالة')
+              : context.tr('المكافأة غير فعالة'),
           style: AppTypography.bodyMedium.copyWith(
             color: color,
             fontWeight: FontWeight.w700,
@@ -913,7 +930,7 @@ class _EmptyRewardsView extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'لا توجد مكافآت حالياً',
+            context.tr('لا توجد مكافآت حالياً'),
             style: AppTypography.titleMedium.copyWith(
               color: context.appText,
               fontWeight: FontWeight.w900,
@@ -921,7 +938,7 @@ class _EmptyRewardsView extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'عند توفر مكافآت ولاء جديدة ستظهر هنا مباشرة.',
+            context.tr('عند توفر مكافآت ولاء جديدة ستظهر هنا مباشرة.'),
             textAlign: TextAlign.center,
             style: AppTypography.bodyMedium.copyWith(
               color: context.appMutedText,
@@ -959,9 +976,9 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 18),
             ElevatedButton(
               onPressed: onRetry,
-              child: const Text(
-                'إعادة المحاولة',
-                style: TextStyle(color: AppColors.white),
+              child: Text(
+                context.tr('إعادة المحاولة'),
+                style: const TextStyle(color: AppColors.white),
               ),
             ),
           ],

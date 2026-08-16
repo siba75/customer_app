@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/const/config.dart';
 import 'package:flutter/material.dart';
@@ -76,10 +77,10 @@ class AdModel {
   String get subtitle => description;
 
   String get badge {
-    if (!isActive) return 'غير فعال';
-    if (isScheduled) return 'مجدول';
-    if (isExpired) return 'منتهي';
-    return 'فعال الآن';
+    if (!isActive) return AppLocalizations.translate('غير فعال');
+    if (isScheduled) return AppLocalizations.translate('مجدول');
+    if (isExpired) return AppLocalizations.translate('منتهي');
+    return AppLocalizations.translate('فعال الآن');
   }
 
   Color get statusColor {
@@ -91,35 +92,50 @@ class AdModel {
   String get placementLabel {
     switch (placement) {
       case 'HOME':
-        return 'الرئيسية';
+        return AppLocalizations.translate('الرئيسية');
       case 'CHECKOUT':
-        return 'إتمام الطلب';
+        return AppLocalizations.translate('إتمام الطلب');
       case 'SIDEBAR':
-        return 'الشريط الجانبي';
+        return AppLocalizations.translate('الشريط الجانبي');
       default:
-        return placement.isEmpty ? 'عام' : placement;
+        return placement.isEmpty ? AppLocalizations.translate('عام') : placement;
     }
   }
 
   String get dateRange {
     final start = _formatDate(startDate);
-    final end = endDate == null ? 'مستمر' : _formatDate(endDate);
+    final end = endDate == null
+        ? AppLocalizations.translate('مستمر')
+        : _formatDate(endDate);
 
-    if (start == null && endDate == null) return 'بدون مدة محددة';
-    if (start == null) return 'حتى $end';
-    return 'من $start إلى $end';
+    if (start == null && endDate == null) {
+      return AppLocalizations.translate('بدون مدة محددة');
+    }
+    if (start == null) {
+      return AppLocalizations.translateWithArgs('حتى {end}', {'end': end});
+    }
+    return AppLocalizations.translateWithArgs('من {start} إلى {end}', {
+      'start': start,
+      'end': end,
+    });
   }
 
-  String get startDateLabel => _formatDateTime(startDate) ?? 'غير محدد';
+  String get startDateLabel =>
+      _formatDateTime(startDate) ?? AppLocalizations.translate('غير محدد');
 
-  String get endDateLabel => _formatDateTime(endDate) ?? 'مستمر';
+  String get endDateLabel =>
+      _formatDateTime(endDate) ?? AppLocalizations.translate('مستمر');
 
-  String get createdAtLabel => _formatDateTime(createdAt) ?? 'غير متاح';
+  String get createdAtLabel =>
+      _formatDateTime(createdAt) ?? AppLocalizations.translate('غير متاح');
 
-  String get updatedAtLabel => _formatDateTime(updatedAt) ?? 'غير متاح';
+  String get updatedAtLabel =>
+      _formatDateTime(updatedAt) ?? AppLocalizations.translate('غير متاح');
 
   String get actionText =>
-      linkUrl == null || linkUrl!.isEmpty ? 'اكتشف العرض' : 'عرض التفاصيل';
+      linkUrl == null || linkUrl!.isEmpty
+      ? AppLocalizations.translate('اكتشف العرض')
+      : AppLocalizations.translate('عرض التفاصيل');
 
   IconData get icon {
     switch (placement) {

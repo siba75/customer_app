@@ -2,12 +2,20 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter Mobile - Local API",
+      "name": "Flutter Mobile - USB Local API",
       "request": "launch",
       "type": "dart",
       "preLaunchTask": "adb reverse api",
       "toolArgs": [
         "--dart-define=API_BASE_URL=http://127.0.0.1:3000"
+      ]
+    },
+    {
+      "name": "Flutter Mobile - WiFi API",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=http://192.168.1.6:3000"
       ]
     }
   ]

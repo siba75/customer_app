@@ -1,5 +1,5 @@
 import 'package:customer_app/core/const/config.dart';
-import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/dio/api_auth.dart';
 import 'package:customer_app/model/category_model.dart';
 import 'package:dio/dio.dart';
 
@@ -13,7 +13,7 @@ class CategoryApi {
     try {
       final response = await _dio.get(
         ApiConfig.categoriesEndpoint,
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
       final data = _asMap(response.data);
       final categories = data['data'];
@@ -27,6 +27,7 @@ class CategoryApi {
 
       throw Exception('صيغة بيانات التصنيفات غير صحيحة.');
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل التصنيفات.');
     }
   }
@@ -35,23 +36,14 @@ class CategoryApi {
     try {
       final response = await _dio.get(
         '${ApiConfig.categoriesEndpoint}/$id',
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return CategoryModel.fromJson(_asMap(response.data));
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل منتجات التصنيف.');
     }
-  }
-
-  Future<Options> _authOptions() async {
-    final token = await SecureStorage.read('auth_token');
-
-    if (token == null || token.isEmpty) {
-      throw Exception('انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى.');
-    }
-
-    return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
   Map<String, dynamic> _asMap(dynamic data) {
@@ -60,14 +52,6 @@ class CategoryApi {
   }
 
   String? _readErrorMessage(DioException error) {
-    final data = error.response?.data;
-
-    if (data is Map<String, dynamic>) {
-      return data['message']?.toString() ??
-          data['error']?.toString() ??
-          data['detail']?.toString();
-    }
-
-    return data?.toString();
+    return ApiAuth.readErrorMessage(error);
   }
 }

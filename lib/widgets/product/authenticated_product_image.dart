@@ -24,7 +24,7 @@ class AuthenticatedProductImage extends StatelessWidget {
     }
 
     return FutureBuilder<String?>(
-      future: SecureStorage.read('auth_token'),
+      future: SecureStorage.read(SecureStorage.authTokenKey),
       builder: (context, snapshot) {
         final token = snapshot.data;
         final needsAuthHeaders = _needsAuthHeaders;

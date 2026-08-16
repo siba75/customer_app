@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -53,7 +54,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (_code.length != _otpLength) {
       showCustomSnackBar(
         context,
-        'الرجاء إدخال رمز التحقق كاملًا',
+        context.tr('الرجاء إدخال رمز التحقق كاملًا'),
         backgroundColor: AppColors.error,
         icon: Icons.error_outline,
       );
@@ -142,7 +143,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
           return ResponsiveKeyboardPage(
             appBar: AppBar(
-              title: const Text('تأكيد الحساب'),
+              title: Text(context.tr('تأكيد الحساب')),
               leading: IconButton(
                 onPressed: () => Navigator.pushReplacement(
                   context,
@@ -155,9 +156,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 24),
-                _buildHeader(),
+                _buildHeader(context),
                 const SizedBox(height: 32),
-                _buildOtpCard(isLoading),
+                _buildOtpCard(context, isLoading),
                 const SizedBox(height: 24),
                 _buildVerifyButton(context, isLoading),
                 const SizedBox(height: 16),
@@ -170,7 +171,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Column(
       children: [
         Container(
@@ -188,7 +189,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'تحقق من بريدك الإلكتروني',
+          context.tr('تحقق من بريدك الإلكتروني'),
           textAlign: TextAlign.center,
           style: AppTypography.headlineSmall.copyWith(
             color: context.appText,
@@ -197,7 +198,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         ),
         const SizedBox(height: 10),
         Text(
-          'أدخل رمز التحقق المرسل إلى',
+          context.tr('أدخل رمز التحقق المرسل إلى'),
           textAlign: TextAlign.center,
           style: AppTypography.bodyLarge.copyWith(color: context.appMutedText),
         ),
@@ -212,7 +213,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     );
   }
 
-  Widget _buildOtpCard(bool isLoading) {
+  Widget _buildOtpCard(BuildContext context, bool isLoading) {
     return Card(
       elevation: 0,
       color: context.appSurface,
@@ -241,7 +242,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'رمز التحقق',
+                    context.tr('رمز التحقق'),
                     style: AppTypography.titleMedium.copyWith(
                       color: context.appText,
                     ),
@@ -267,7 +268,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'يتكون الرمز من 8 أرقام. يمكنك لصق الرمز كاملًا هنا.',
+              context.tr('يتكون الرمز من 8 أرقام. يمكنك لصق الرمز كاملًا هنا.'),
               textAlign: TextAlign.center,
               style: AppTypography.bodySmall.copyWith(
                 color: context.appMutedText,
@@ -343,9 +344,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   color: AppColors.white,
                 ),
               )
-            : const Text(
-                'تأكيد الرمز',
-                style: TextStyle(
+            : Text(
+                context.tr('تأكيد الرمز'),
+                style: const TextStyle(
                   color: AppColors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -364,7 +365,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               MaterialPageRoute(builder: (_) => const LoginScreen()),
             ),
       icon: const Icon(Icons.login_outlined),
-      label: const Text('العودة لتسجيل الدخول'),
+      label: Text(context.tr('العودة لتسجيل الدخول')),
       style: TextButton.styleFrom(foregroundColor: AppColors.primary),
     );
   }

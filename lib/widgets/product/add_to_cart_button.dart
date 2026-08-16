@@ -1,4 +1,5 @@
 // lib/widgets/product/add_to_cart_button.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -120,7 +121,7 @@ class _ButtonContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'أضف إلى السلة',
+                context.tr('أضف إلى السلة'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.buttonLarge.copyWith(
@@ -130,7 +131,7 @@ class _ButtonContent extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                _priceText,
+                _priceText(context),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -147,9 +148,12 @@ class _ButtonContent extends StatelessWidget {
     );
   }
 
-  String get _priceText {
-    final price = '${totalPrice.toStringAsFixed(2)} ل.س';
+  String _priceText(BuildContext context) {
+    final price = context.money(totalPrice);
     if (isCompact || quantity == 1) return price;
-    return '$price • $quantity منتجات';
+    return context.trArgs('{price} • {quantity} منتجات', {
+      'price': price,
+      'quantity': quantity,
+    });
   }
 }

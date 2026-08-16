@@ -1,4 +1,5 @@
 // lib/screens/cart_screen.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -10,6 +11,7 @@ import 'package:customer_app/pages/checkout_screen.dart';
 import 'package:customer_app/widgets/cart_widgets/cart_empty_state.dart';
 import 'package:customer_app/widgets/cart_widgets/cart_item_card.dart';
 import 'package:customer_app/widgets/cart_widgets/cart_summary_card.dart';
+import 'package:customer_app/widgets/cart_widgets/cart_discount_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -73,7 +75,8 @@ class CartScreen extends StatelessWidget {
                       )
                     : const CartEmptyState(),
               ),
-              if (state.hasItems)
+              if (state.hasItems) ...[
+                CartDiscountSelector(state: state),
                 CartSummaryCard(
                   subtotal: state.subtotal,
                   discount: state.discount,
@@ -81,6 +84,7 @@ class CartScreen extends StatelessWidget {
                   isCalculatingDiscount: state.isCalculatingDiscount,
                   onCheckout: () => _goToCheckout(context, state),
                 ),
+              ],
             ],
           ),
         );
@@ -133,9 +137,9 @@ class _CartHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'سلة التسوق',
-                    style: TextStyle(
+                  Text(
+                    context.tr('سلة التسوق'),
+                    style: const TextStyle(
                       color: AppColors.white,
                       fontSize: 19,
                       fontWeight: FontWeight.w900,
@@ -143,7 +147,9 @@ class _CartHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$count منتجات جاهزة لإتمام الطلب',
+                    context.trArgs('{count} منتجات جاهزة لإتمام الطلب', {
+                      'count': count,
+                    }),
                     style: AppTypography.bodyMedium.copyWith(
                       color: AppColors.white.withValues(alpha: 0.82),
                     ),

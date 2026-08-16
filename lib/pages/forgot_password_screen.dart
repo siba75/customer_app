@@ -1,4 +1,5 @@
 // lib/screens/forgot_password_screen.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/widgets/responsive_keyboard_page.dart';
@@ -33,14 +34,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text('تم الإرسال'),
+          title: Text(context.tr('تم الإرسال')),
           content: Text(
-            'تم إرسال رابط إعادة تعيين كلمة المرور إلى ${_emailController.text}',
+            context.trArgs(
+              'تم إرسال رابط إعادة تعيين كلمة المرور إلى {email}',
+              {'email': _emailController.text},
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('حسناً', style: TextStyle(color: AppColors.primary)),
+              child: Text(
+                context.tr('حسناً'),
+                style: const TextStyle(color: AppColors.primary),
+              ),
             ),
           ],
         ),
@@ -51,24 +58,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return ResponsiveKeyboardPage(
-      appBar: AppBar(title: const Text('نسيت كلمة المرور')),
+      appBar: AppBar(title: Text(context.tr('نسيت كلمة المرور'))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 40),
-          Text('نسيت كلمة المرور؟', style: AppTypography.headlineMedium),
+          Text(
+            context.tr('نسيت كلمة المرور؟'),
+            style: AppTypography.headlineMedium,
+          ),
           const SizedBox(height: 8),
           Text(
-            'أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين',
+            context.tr('أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين'),
             style: AppTypography.bodyLarge,
           ),
           const SizedBox(height: 32),
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'البريد الإلكتروني',
-              prefixIcon: Icon(Icons.email_outlined),
+            decoration: InputDecoration(
+              labelText: context.tr('البريد الإلكتروني'),
+              prefixIcon: const Icon(Icons.email_outlined),
             ),
           ),
           const SizedBox(height: 24),
@@ -86,7 +96,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('إرسال رابط إعادة التعيين'),
+                  : Text(context.tr('إرسال رابط إعادة التعيين')),
             ),
           ),
         ],

@@ -1,10 +1,13 @@
 // lib/screens/splash_screen.dart
 import 'dart:async';
 
+import 'package:customer_app/core/const/config.dart';
 import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/services/notification_service.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:customer_app/dio/customer_api.dart';
 import 'package:customer_app/pages/home_screen.dart';
 import 'package:customer_app/pages/login_screen.dart';
@@ -58,9 +61,9 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _goToNextScreen() async {
     if (!mounted) return;
 
-    final isLoggedIn = await _hasValidSavedSession();
+    final session = await _resolveSavedSession();
 
-    if (isLoggedIn) {
+    if (session.status == _SessionStatus.authenticated) {
       unawaited(NotificationService.prepareForSignedInUser());
     }
 
@@ -69,8 +72,15 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 520),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            isLoggedIn ? const HomeScreen() : const LoginScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return switch (session.status) {
+            _SessionStatus.authenticated => const HomeScreen(),
+            _SessionStatus.serverUnavailable => ServerUnavailableScreen(
+              message: session.message,
+            ),
+            _SessionStatus.unauthenticated => const LoginScreen(),
+          };
+        },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -79,22 +89,33 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Future<bool> _hasValidSavedSession() async {
-    final token = await SecureStorage.read('auth_token');
-    if (token == null || token.isEmpty) return false;
+  Future<_SessionCheckResult> _resolveSavedSession() async {
+    final token = await SecureStorage.read(SecureStorage.authTokenKey);
+    if (token == null || token.isEmpty) {
+      return const _SessionCheckResult(_SessionStatus.unauthenticated);
+    }
 
     try {
       await CustomerApi().getProfile();
-      return true;
+      return const _SessionCheckResult(_SessionStatus.authenticated);
     } on CustomerSessionExpiredException {
-      await SecureStorage.delete('auth_token');
-      await SecureStorage.delete('user_email');
+      await SecureStorage.clearAuthSession(
+        notice: 'انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى.',
+      );
       NotificationService.disconnectSocketNotifications();
-      return false;
-    } on CustomerConnectionException {
-      return true;
-    } catch (_) {
-      return true;
+      return const _SessionCheckResult(_SessionStatus.unauthenticated);
+    } on CustomerConnectionException catch (e) {
+      NotificationService.disconnectSocketNotifications();
+      return _SessionCheckResult(
+        _SessionStatus.serverUnavailable,
+        message: e.message,
+      );
+    } catch (e) {
+      NotificationService.disconnectSocketNotifications();
+      return _SessionCheckResult(
+        _SessionStatus.serverUnavailable,
+        message: e.toString().replaceFirst('Exception: ', ''),
+      );
     }
   }
 
@@ -131,6 +152,186 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+enum _SessionStatus { authenticated, unauthenticated, serverUnavailable }
+
+class _SessionCheckResult {
+  final _SessionStatus status;
+  final String? message;
+
+  const _SessionCheckResult(this.status, {this.message});
+}
+
+class ServerUnavailableScreen extends StatefulWidget {
+  final String? message;
+
+  const ServerUnavailableScreen({super.key, this.message});
+
+  @override
+  State<ServerUnavailableScreen> createState() =>
+      _ServerUnavailableScreenState();
+}
+
+class _ServerUnavailableScreenState extends State<ServerUnavailableScreen> {
+  bool _isRetrying = false;
+  String? _message;
+
+  @override
+  void initState() {
+    super.initState();
+    _message = widget.message;
+  }
+
+  Future<void> _retry() async {
+    if (_isRetrying) return;
+    setState(() => _isRetrying = true);
+
+    try {
+      await CustomerApi().getProfile();
+      await NotificationService.prepareForSignedInUser();
+
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } on CustomerSessionExpiredException {
+      await SecureStorage.clearAuthSession(
+        notice: 'انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى.',
+      );
+      NotificationService.disconnectSocketNotifications();
+
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } on CustomerConnectionException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _message = e.message;
+        _isRetrying = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _message = e.toString().replaceFirst('Exception: ', '');
+        _isRetrying = false;
+      });
+    }
+  }
+
+  Future<void> _signInAgain() async {
+    await SecureStorage.clearAuthSession();
+    NotificationService.disconnectSocketNotifications();
+
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: context.appBackground,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Spacer(),
+              Container(
+                width: 92,
+                height: 92,
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: const Icon(
+                  Icons.wifi_off_rounded,
+                  color: AppColors.primary,
+                  size: 44,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                context.tr('تعذر الوصول إلى السيرفر'),
+                textAlign: TextAlign.center,
+                style: AppTypography.headlineSmall.copyWith(
+                  color: context.appText,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _message ??
+                    context.tr(
+                      'التطبيق لا يستطيع الوصول للسيرفر حالياً. تسجيل دخولك محفوظ، اضغطي إعادة المحاولة بعد تشغيل السيرفر.',
+                    ),
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: context.appMutedText,
+                  height: 1.55,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  context.trArgs('عنوان السيرفر الحالي: {url}', {
+                    'url': ApiConfig.baseUrl,
+                  }),
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton.icon(
+                  onPressed: _isRetrying ? null : _retry,
+                  icon: _isRetrying
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.white,
+                          ),
+                        )
+                      : const Icon(Icons.refresh_rounded),
+                  label: Text(
+                    _isRetrying
+                        ? context.tr('جاري التحقق...')
+                        : context.tr('إعادة المحاولة'),
+                    style: const TextStyle(color: AppColors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _isRetrying ? null : _signInAgain,
+                child: Text(context.tr('تسجيل الدخول بحساب آخر')),
+              ),
+              const Spacer(),
+            ],
+          ),
         ),
       ),
     );

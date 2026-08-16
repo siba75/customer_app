@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/helpers/app_error_messages.dart';
 import 'package:customer_app/cubit_folder/category_state.dart';
@@ -32,11 +33,14 @@ class HomeCategoriesSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'التصنيفات',
-                style: TextStyle(color: AppColors.primaryLight),
+              Text(
+                context.tr('التصنيفات'),
+                style: const TextStyle(color: AppColors.primaryLight),
               ),
-              TextButton(onPressed: onShowAll, child: const Text('عرض الكل')),
+              TextButton(
+                onPressed: onShowAll,
+                child: Text(context.tr('عرض الكل')),
+              ),
             ],
           ),
         ),
@@ -72,7 +76,7 @@ class _CategoriesList extends StatelessWidget {
         icon: Icons.category_outlined,
         title: AppErrorMessages.friendly(
           categoryState.errorMessage,
-          fallback: 'لا توجد تصنيفات حالياً',
+          fallback: context.tr('لا توجد تصنيفات حالياً'),
         ),
       );
     }

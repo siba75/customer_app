@@ -92,7 +92,7 @@ class NotificationService {
   }
 
   static Future<void> connectSocketNotifications() async {
-    final token = await SecureStorage.read('auth_token');
+    final token = await SecureStorage.read(SecureStorage.authTokenKey);
     if (token == null || token.isEmpty) return;
 
     final currentSocket = _socket;
@@ -173,7 +173,7 @@ class NotificationService {
   }
 
   static Future<void> startInboxFallbackPolling() async {
-    final token = await SecureStorage.read('auth_token');
+    final token = await SecureStorage.read(SecureStorage.authTokenKey);
     if (token == null || token.isEmpty) return;
 
     await _pollUnreadInbox(showNewNotifications: _inboxPollingSeeded);
@@ -291,7 +291,7 @@ class NotificationService {
   }
 
   static Future<void> _sendTokenToBackend(String token) async {
-    final authToken = await SecureStorage.read('auth_token');
+    final authToken = await SecureStorage.read(SecureStorage.authTokenKey);
     if (authToken == null || authToken.isEmpty) return;
 
     try {

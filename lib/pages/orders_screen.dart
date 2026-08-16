@@ -1,4 +1,5 @@
 // lib/screens/orders/orders_screen.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -57,12 +58,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('إلغاء الطلب'),
-        content: Text('هل أنت متأكد من إلغاء الطلب ${order.orderNumber}؟'),
+        title: Text(context.tr('إلغاء الطلب')),
+        content: Text(
+          context.trArgs('هل أنت متأكد من إلغاء الطلب {orderNumber}؟', {
+            'orderNumber': order.orderNumber,
+          }),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('تراجع', style: TextStyle(color: AppColors.grey)),
+            child: Text(context.tr('تراجع'), style: TextStyle(color: AppColors.grey)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -72,9 +77,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
-              'إلغاء الطلب',
-              style: TextStyle(color: AppColors.white),
+            child: Text(
+              context.tr('إلغاء الطلب'),
+              style: const TextStyle(color: AppColors.white),
             ),
           ),
         ],
@@ -87,8 +92,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
       await context.read<OrderCubit>().cancelOrder(order);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم إلغاء الطلب بنجاح'),
+        SnackBar(
+          content: Text(context.tr('تم إلغاء الطلب بنجاح')),
           backgroundColor: AppColors.success,
         ),
       );
@@ -108,12 +113,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: const Text('طلباتي'),
+        title: Text(context.tr('طلباتي')),
         actions: [
           BlocBuilder<OrderCubit, OrderState>(
             builder: (context, state) {
               return IconButton(
-                tooltip: 'تحديث الطلبات',
+                tooltip: context.tr('تحديث الطلبات'),
                 onPressed: state.isLoading ? null : _refreshOrders,
                 icon: state.isLoading
                     ? const SizedBox(
@@ -214,7 +219,7 @@ class _OrdersMessage extends StatelessWidget {
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: onRetry,
-              child: const Text('إعادة المحاولة'),
+              child: Text(context.tr('إعادة المحاولة')),
             ),
           ],
         ),

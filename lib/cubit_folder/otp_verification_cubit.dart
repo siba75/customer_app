@@ -13,7 +13,8 @@ class OtpVerificationCubit extends Cubit<OtpVerificationState> {
     try {
       emit(OtpVerificationLoading());
 
-      final authToken = token ?? await SecureStorage.read('auth_token');
+      final authToken =
+          token ?? await SecureStorage.read(SecureStorage.authTokenKey);
       if (authToken == null || authToken.isEmpty) {
         emit(
           OtpVerificationError('انتهت الجلسة، الرجاء إنشاء الحساب مرة أخرى'),

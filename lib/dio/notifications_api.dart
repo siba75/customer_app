@@ -1,5 +1,5 @@
 import 'package:customer_app/core/const/config.dart';
-import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/dio/api_auth.dart';
 import 'package:customer_app/model/notification_model.dart';
 import 'package:dio/dio.dart';
 
@@ -27,11 +27,12 @@ class NotificationsApi {
       final response = await _dio.get(
         ApiConfig.notificationsMeEndpoint,
         queryParameters: queryParameters,
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return NotificationsPage.fromJson(response.data);
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل الإشعارات.');
     }
   }
@@ -57,9 +58,10 @@ class NotificationsApi {
           'deviceToken': token,
           'platform': platform,
         },
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تسجيل جهاز الإشعارات.');
     }
   }
@@ -72,23 +74,14 @@ class NotificationsApi {
       final action = isRead ? 'read' : 'unread';
       final response = await _dio.patch(
         '${ApiConfig.notificationsEndpoint}/$id/$action',
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return _readNotification(response.data);
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحديث حالة الإشعار.');
     }
-  }
-
-  Future<Options> _authOptions() async {
-    final token = await SecureStorage.read('auth_token');
-
-    if (token == null || token.isEmpty) {
-      throw Exception('انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى.');
-    }
-
-    return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
   CustomerNotification? _readNotification(dynamic data) {
@@ -105,14 +98,6 @@ class NotificationsApi {
   }
 
   String? _readErrorMessage(DioException error) {
-    final data = error.response?.data;
-
-    if (data is Map<String, dynamic>) {
-      return data['message']?.toString() ??
-          data['error']?.toString() ??
-          data['detail']?.toString();
-    }
-
-    return data?.toString();
+    return ApiAuth.readErrorMessage(error);
   }
 }

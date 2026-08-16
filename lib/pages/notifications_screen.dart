@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -93,12 +94,12 @@ class _NotificationsViewState extends State<_NotificationsView> {
     return Scaffold(
       backgroundColor: context.appBackground,
       appBar: AppBar(
-        title: const Text('الإشعارات'),
+        title: Text(context.tr('الإشعارات')),
         actions: [
           BlocBuilder<NotificationsCubit, NotificationsState>(
             builder: (context, state) {
               return IconButton(
-                tooltip: 'تحديث الإشعارات',
+                tooltip: context.tr('تحديث الإشعارات'),
                 onPressed: state.isLoading
                     ? null
                     : context.read<NotificationsCubit>().loadNotifications,
@@ -318,9 +319,9 @@ class _NotificationsErrorView extends StatelessWidget {
             const SizedBox(height: 18),
             ElevatedButton(
               onPressed: onRetry,
-              child: const Text(
-                'إعادة المحاولة',
-                style: TextStyle(color: AppColors.white),
+              child: Text(
+                context.tr('إعادة المحاولة'),
+                style: const TextStyle(color: AppColors.white),
               ),
             ),
           ],

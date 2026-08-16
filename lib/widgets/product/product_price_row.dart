@@ -1,4 +1,5 @@
 // lib/widgets/product/product_price_row.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +26,7 @@ class ProductPriceRow extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
-                '${price.toStringAsFixed(2)} ل.س',
+                context.money(price),
                 style:
                     (isTablet
                             ? AppTypography.headlineSmall
@@ -62,7 +63,7 @@ class ProductPriceRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
-            product['unit'] ?? 'قطعة',
+            context.tr(product['unit']?.toString() ?? 'قطعة'),
             style: AppTypography.bodySmall.copyWith(
               color: AppColors.secondary,
               fontWeight: FontWeight.w800,
@@ -85,13 +86,13 @@ class ProductPriceRow extends StatelessWidget {
 
     final type = product['discount_type']?.toString().toUpperCase();
     final value = _toDouble(product['discount_value']);
-    if (value <= 0) return 'خصم متاح';
+    if (value <= 0) return AppLocalizations.translate('خصم متاح');
 
     final formatted = value == value.roundToDouble()
         ? value.toInt().toString()
         : value.toStringAsFixed(2);
     if (type == 'PERCENTAGE') return '$formatted%';
-    if (type == 'FIXED_AMOUNT') return '$formatted ل.س';
-    return 'خصم متاح';
+    if (type == 'FIXED_AMOUNT') return AppLocalizations.formatCurrency(value);
+    return AppLocalizations.translate('خصم متاح');
   }
 }

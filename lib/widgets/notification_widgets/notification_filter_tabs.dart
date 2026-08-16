@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -60,7 +61,7 @@ class NotificationFilterTabs extends StatelessWidget {
               size: 17,
               color: isSelected ? AppColors.white : AppColors.primary,
             ),
-            label: Text(filter.label),
+            label: Text(context.tr(filter.label)),
             labelStyle: AppTypography.bodyMedium.copyWith(
               color: isSelected ? AppColors.white : context.appMutedText,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

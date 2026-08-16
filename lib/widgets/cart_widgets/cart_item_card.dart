@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -109,12 +110,12 @@ class _ProductInfo extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'لكل ${item.unit}',
+          context.trArgs('لكل {unit}', {'unit': context.tr(item.unit)}),
           style: AppTypography.bodySmall.copyWith(color: context.appMutedText),
         ),
         const SizedBox(height: 12),
         Text(
-          '${item.price.toStringAsFixed(2)} ل.س',
+          context.money(item.price),
           style: AppTypography.titleMedium.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.w800,
@@ -122,7 +123,9 @@ class _ProductInfo extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'المجموع: ${item.total.toStringAsFixed(2)} ل.س',
+          context.trArgs('المجموع: {total}', {
+            'total': context.money(item.total),
+          }),
           style: AppTypography.bodyMedium.copyWith(
             color: context.appText,
             fontWeight: FontWeight.w700,

@@ -1,30 +1,39 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-void showCustomSnackBar(BuildContext context, String message, {Color backgroundColor = Colors.blue, Color textColor = Colors.white, IconData? icon}) {
+void showCustomSnackBar(
+  BuildContext context,
+  String message, {
+  Color backgroundColor = Colors.blue,
+  Color textColor = Colors.white,
+  IconData? icon,
+}) {
   final snackBar = SnackBar(
     content: Row(
       children: [
-        if (icon != null) Icon(icon, color: textColor), // إذا كان هناك أيقونة، سيتم عرضها
-        SizedBox(width: 8),
-        Expanded(child: Text(message, style: TextStyle(color: textColor))),
+        if (icon != null) Icon(icon, color: textColor),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            context.tr(message),
+            style: TextStyle(color: textColor),
+          ),
+        ),
       ],
     ),
-    backgroundColor: backgroundColor, // لون خلفية
-    duration: Duration(seconds: 3), // مدة عرض الـSnackBar
-    behavior: SnackBarBehavior.floating, // طريقة عرض الـSnackBar
+    backgroundColor: backgroundColor,
+    duration: const Duration(seconds: 3),
+    behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10), // حواف دائرية
+      borderRadius: BorderRadius.circular(10),
     ),
-    margin: EdgeInsets.all(16), // المسافة حول الـSnackBar
+    margin: const EdgeInsets.all(16),
     action: SnackBarAction(
-      label: 'موافق', // زر تفاعل
+      label: context.tr('موافق'),
       textColor: Colors.amberAccent,
-      onPressed: () {
-        // إضافة أكشن عند الضغط على الزر
-      },
+      onPressed: () {},
     ),
   );
 
-  // عرض الـSnackBar
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }

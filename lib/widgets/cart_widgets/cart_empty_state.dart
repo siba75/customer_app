@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -29,14 +30,16 @@ class CartEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             Text(
-              'سلتك فارغة',
+              context.tr('سلتك فارغة'),
               style: AppTypography.headlineSmall.copyWith(
                 color: context.appText,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'أضيفي منتجاتك المفضلة وارجعي لإكمال الطلب بسهولة.',
+              context.tr(
+                'أضيفي منتجاتك المفضلة وارجعي لإكمال الطلب بسهولة.',
+              ),
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appMutedText,

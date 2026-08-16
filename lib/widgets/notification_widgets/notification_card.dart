@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -145,8 +146,13 @@ class _NotificationBody extends StatelessWidget {
             ),
             Text(
               notification.receivedDate.isEmpty
-                  ? 'وصل ${notification.receivedTime}'
-                  : 'وصل ${notification.receivedTime} - ${notification.receivedDate}',
+                  ? context.trArgs('وصل {time}', {
+                      'time': notification.receivedTime,
+                    })
+                  : context.trArgs('وصل {time} - {date}', {
+                      'time': notification.receivedTime,
+                      'date': notification.receivedDate,
+                    }),
               style: AppTypography.bodySmall.copyWith(
                 color: context.appMutedText,
                 fontWeight: FontWeight.w600,

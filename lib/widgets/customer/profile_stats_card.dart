@@ -1,4 +1,5 @@
 // lib/widgets/profile/profile_stats_card.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +58,7 @@ class ProfileStatsCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                title,
+                context.tr(title),
                 style: AppTypography.bodySmall.copyWith(
                   color: context.appMutedText,
                 ),

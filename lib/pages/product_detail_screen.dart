@@ -1,4 +1,5 @@
 // lib/screens/product/product_detail_screen.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -123,7 +124,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     cartCubit.addProduct(_product, quantity: quantityToAdd);
     _showMessage(
-      'تم إضافة $quantityToAdd × ${_product['name']} إلى السلة',
+      context.trArgs('تم إضافة {quantity} × {name} إلى السلة', {
+        'quantity': quantityToAdd,
+        'name': _product['name'],
+      }),
       AppColors.success,
     );
   }
@@ -138,7 +142,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void _showMessage(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, textAlign: TextAlign.center),
+        content: Text(context.tr(message), textAlign: TextAlign.center),
         backgroundColor: color,
         duration: const Duration(seconds: 2),
       ),
@@ -275,7 +279,7 @@ class _QuantityCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'اختاري الكمية',
+                  context.tr('اختاري الكمية'),
                   style: AppTypography.titleSmall.copyWith(
                     color: context.appText,
                     fontWeight: FontWeight.w800,
@@ -284,8 +288,10 @@ class _QuantityCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   maxQuantity > 0
-                      ? 'المتوفر حالياً: $maxQuantity'
-                      : 'غير متوفر حالياً',
+                      ? context.trArgs('المتوفر حالياً: {quantity}', {
+                          'quantity': maxQuantity,
+                        })
+                      : context.tr('غير متوفر حالياً'),
                   style: AppTypography.bodySmall.copyWith(
                     color: maxQuantity > 0
                         ? context.appMutedText

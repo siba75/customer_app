@@ -1,31 +1,42 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
+
 class AppErrorMessages {
   static String friendly(String? message, {String? fallback}) {
     final text = message?.trim() ?? '';
-    if (text.isEmpty) return fallback ?? 'حدث خطأ غير متوقع، حاول مرة أخرى.';
+    final fallbackMessage = fallback ?? 'حدث خطأ غير متوقع، حاول مرة أخرى.';
+    if (text.isEmpty) return AppLocalizations.translate(fallbackMessage);
 
     final lower = text.toLowerCase();
     if (isBackendSchemaError(text)) {
-      return 'الخدمة غير متاحة حالياً، يرجى المحاولة لاحقاً.';
+      return AppLocalizations.translate(
+        'الخدمة غير متاحة حالياً، يرجى المحاولة لاحقاً.',
+      );
     }
 
     if (lower.contains('request timeout')) {
-      return 'الخادم تأخر بالاستجابة، حاول مرة أخرى.';
+      return AppLocalizations.translate(
+        'الخادم تأخر بالاستجابة، حاول مرة أخرى.',
+      );
     }
 
     if (lower.contains('forbidden')) {
-      return 'لا تملك صلاحية الوصول لهذه البيانات.';
+      return AppLocalizations.translate('لا تملك صلاحية الوصول لهذه البيانات.');
     }
 
     if (lower.contains('insufficient loyalty points')) {
-      return 'نقاطك غير كافية لاستبدال هذه المكافأة.';
+      return AppLocalizations.translate(
+        'نقاطك غير كافية لاستبدال هذه المكافأة.',
+      );
     }
 
     if (lower.contains('record not found') &&
         lower.contains('loyaltydiscountoffer')) {
-      return 'هذه المكافأة لم تعد متاحة للاستبدال.';
+      return AppLocalizations.translate(
+        'هذه المكافأة لم تعد متاحة للاستبدال.',
+      );
     }
 
-    return text;
+    return AppLocalizations.translate(text);
   }
 
   static bool isBackendSchemaError(String? message) {

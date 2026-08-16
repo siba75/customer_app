@@ -1,5 +1,5 @@
 import 'package:customer_app/core/const/config.dart';
-import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/dio/api_auth.dart';
 import 'package:customer_app/model/discount_calculation_model.dart';
 import 'package:customer_app/model/discount_model.dart';
 import 'package:dio/dio.dart';
@@ -14,7 +14,7 @@ class DiscountApi {
     try {
       final response = await _dio.get(
         ApiConfig.activeDiscountsEndpoint,
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
       final data = _asMap(response.data);
       final discounts = data['data'];
@@ -29,6 +29,7 @@ class DiscountApi {
 
       throw Exception('صيغة بيانات الخصومات غير صحيحة.');
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل الخصومات.');
     }
   }
@@ -41,20 +42,24 @@ class DiscountApi {
     int? categoryId,
   }) async {
     try {
+      final data = <String, dynamic>{
+        'discountId': discountId,
+        'subtotal': subtotal,
+      };
+
+      if (customerId != null) data['customerId'] = customerId;
+      if (productId != null) data['productId'] = productId;
+      if (categoryId != null) data['categoryId'] = categoryId;
+
       final response = await _dio.post(
         ApiConfig.calculateDiscountEndpoint,
-        data: {
-          'customerId': customerId,
-          'productId': productId,
-          'categoryId': categoryId,
-          'discountId': discountId,
-          'subtotal': subtotal,
-        },
-        options: await _authOptions(),
+        data: data,
+        options: await ApiAuth.options(),
       );
 
       return DiscountCalculationModel.fromJson(_asMap(response.data));
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر حساب الخصم.');
     }
   }
@@ -74,7 +79,7 @@ class DiscountApi {
       final response = await _dio.post(
         ApiConfig.bestDiscountEndpoint,
         data: data,
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       final calculation = DiscountCalculationModel.fromJson(
@@ -84,18 +89,9 @@ class DiscountApi {
       return calculation.discountId <= 0 ? null : calculation;
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) return null;
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر حساب أفضل خصم.');
     }
-  }
-
-  Future<Options> _authOptions() async {
-    final token = await SecureStorage.read('auth_token');
-
-    if (token == null || token.isEmpty) {
-      throw Exception('انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى.');
-    }
-
-    return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
   Map<String, dynamic> _asMap(dynamic data) {
@@ -104,14 +100,6 @@ class DiscountApi {
   }
 
   String? _readErrorMessage(DioException error) {
-    final data = error.response?.data;
-
-    if (data is Map<String, dynamic>) {
-      return data['message']?.toString() ??
-          data['error']?.toString() ??
-          data['detail']?.toString();
-    }
-
-    return data?.toString();
+    return ApiAuth.readErrorMessage(error);
   }
 }

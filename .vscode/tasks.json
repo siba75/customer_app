@@ -6,6 +6,35 @@
       "type": "shell",
       "command": "C:\\sdk\\platform-tools\\adb.exe",
       "args": ["reverse", "tcp:3000", "tcp:3000"],
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "flutter run mobile wifi",
+      "type": "shell",
+      "command": "flutter",
+      "args": [
+        "run",
+        "--dart-define=API_BASE_URL=http://192.168.1.6:3000"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "flutter run mobile usb",
+      "type": "shell",
+      "dependsOn": ["adb reverse api"],
+      "command": "flutter",
+      "args": [
+        "run",
+        "--dart-define=API_BASE_URL=http://127.0.0.1:3000"
+      ],
       "problemMatcher": []
     }
   ]

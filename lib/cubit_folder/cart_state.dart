@@ -6,18 +6,22 @@ class CartState {
   final List<CartItem> items;
   final List<DiscountModel> activeDiscounts;
   final DiscountCalculationModel? discountCalculation;
+  final int? selectedDiscountId;
   final bool isCalculatingDiscount;
 
   const CartState({
     this.items = const [],
     this.activeDiscounts = const [],
     this.discountCalculation,
+    this.selectedDiscountId,
     this.isCalculatingDiscount = false,
   });
 
   const CartState.initial() : this();
 
   bool get hasItems => items.isNotEmpty;
+
+  bool get hasManualDiscount => selectedDiscountId != null;
 
   int get itemsCount => items.fold(0, (sum, item) => sum + item.quantity);
 
@@ -39,7 +43,8 @@ class CartState {
     return null;
   }
 
-  double get total => (subtotal - discount).clamp(0, double.infinity).toDouble();
+  double get total =>
+      (subtotal - discount).clamp(0, double.infinity).toDouble();
 
   int? get orderDiscountId {
     final invoiceDiscountId = discountCalculation?.discountId;
@@ -53,8 +58,10 @@ class CartState {
     List<CartItem>? items,
     List<DiscountModel>? activeDiscounts,
     DiscountCalculationModel? discountCalculation,
+    int? selectedDiscountId,
     bool? isCalculatingDiscount,
     bool clearDiscountCalculation = false,
+    bool clearSelectedDiscount = false,
   }) {
     return CartState(
       items: items ?? this.items,
@@ -62,6 +69,9 @@ class CartState {
       discountCalculation: clearDiscountCalculation
           ? null
           : discountCalculation ?? this.discountCalculation,
+      selectedDiscountId: clearSelectedDiscount
+          ? null
+          : selectedDiscountId ?? this.selectedDiscountId,
       isCalculatingDiscount:
           isCalculatingDiscount ?? this.isCalculatingDiscount,
     );

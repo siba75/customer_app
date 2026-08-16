@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:flutter/material.dart';
@@ -52,9 +53,9 @@ class NotificationSummaryHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'مركز الإشعارات',
-                  style: TextStyle(
+                Text(
+                  context.tr('مركز الإشعارات'),
+                  style: const TextStyle(
                     color: AppColors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -63,8 +64,11 @@ class NotificationSummaryHeader extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   unreadCount == 0
-                      ? 'كل الإشعارات مقروءة'
-                      : '$unreadCount غير مقروء من أصل $totalCount',
+                      ? context.tr('كل الإشعارات مقروءة')
+                      : context.trArgs(
+                          '{unread} غير مقروء من أصل {total}',
+                          {'unread': unreadCount, 'total': totalCount},
+                        ),
                   style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.white.withValues(alpha: 0.82),
                   ),
@@ -75,7 +79,7 @@ class NotificationSummaryHeader extends StatelessWidget {
           TextButton(
             onPressed: unreadCount == 0 ? null : onMarkAllRead,
             child: Text(
-              'قراءة الكل',
+              context.tr('قراءة الكل'),
               style: AppTypography.bodyMedium.copyWith(
                 color: unreadCount == 0
                     ? AppColors.white.withValues(alpha: 0.45)

@@ -51,7 +51,13 @@ class CartCubit extends Cubit<CartState> {
       );
     }
 
-    emit(state.copyWith(items: updatedItems, clearDiscountCalculation: true));
+    emit(
+      state.copyWith(
+        items: updatedItems,
+        clearDiscountCalculation: true,
+        clearSelectedDiscount: true,
+      ),
+    );
     return calculateBestDiscount();
   }
 
@@ -63,7 +69,13 @@ class CartCubit extends Cubit<CartState> {
       );
     }).toList();
 
-    emit(state.copyWith(items: items, clearDiscountCalculation: true));
+    emit(
+      state.copyWith(
+        items: items,
+        clearDiscountCalculation: true,
+        clearSelectedDiscount: true,
+      ),
+    );
     return calculateBestDiscount();
   }
 
@@ -75,7 +87,13 @@ class CartCubit extends Cubit<CartState> {
       return cartItem.copyWith(quantity: cartItem.quantity - 1);
     }).toList();
 
-    emit(state.copyWith(items: items, clearDiscountCalculation: true));
+    emit(
+      state.copyWith(
+        items: items,
+        clearDiscountCalculation: true,
+        clearSelectedDiscount: true,
+      ),
+    );
     return calculateBestDiscount();
   }
 
@@ -84,7 +102,13 @@ class CartCubit extends Cubit<CartState> {
         .where((cartItem) => cartItem.id != item.id)
         .toList();
 
-    emit(state.copyWith(items: items, clearDiscountCalculation: true));
+    emit(
+      state.copyWith(
+        items: items,
+        clearDiscountCalculation: true,
+        clearSelectedDiscount: true,
+      ),
+    );
     return calculateBestDiscount();
   }
 
@@ -94,14 +118,63 @@ class CartCubit extends Cubit<CartState> {
         items: const [],
         isCalculatingDiscount: false,
         clearDiscountCalculation: true,
+        clearSelectedDiscount: true,
       ),
     );
     return Future.value();
   }
 
+  Future<void> applyDiscount(DiscountModel discount) async {
+    ++_discountRequestId;
+    final subtotal = _subtotalForDiscount(discount);
+
+    if (state.items.isEmpty || subtotal <= 0) {
+      throw Exception('هذا الخصم لا ينطبق على المنتجات الموجودة في السلة.');
+    }
+
+    emit(state.copyWith(isCalculatingDiscount: true));
+
+    try {
+      final calculation = await _discountApi.calculateDiscount(
+        discountId: discount.id,
+        subtotal: subtotal,
+        customerId: discount.customerId,
+        productId: discount.productId,
+        categoryId: discount.categoryId,
+      );
+
+      if (calculation.discountAmount <= 0) {
+        throw Exception('هذا الخصم لا يعطي تخفيضاً على السلة الحالية.');
+      }
+
+      emit(
+        state.copyWith(
+          discountCalculation: calculation,
+          selectedDiscountId: discount.id,
+          isCalculatingDiscount: false,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isCalculatingDiscount: false));
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  Future<void> useBestDiscount() async {
+    emit(
+      state.copyWith(
+        clearDiscountCalculation: true,
+        clearSelectedDiscount: true,
+      ),
+    );
+    await calculateBestDiscount();
+  }
+
   Future<void> calculateBestDiscount() async {
     final subtotal = state.subtotal;
     final requestId = ++_discountRequestId;
+
+    if (state.selectedDiscountId != null) return;
 
     if (subtotal <= 0) {
       emit(

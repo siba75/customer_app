@@ -1,4 +1,5 @@
 // lib/widgets/orders/order_card.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -42,7 +43,7 @@ class OrderCard extends StatelessWidget {
           children: [
             _buildHeader(context),
             _buildItemsPreview(context),
-            _buildActions(),
+            _buildActions(context),
           ],
         ),
       ),
@@ -94,7 +95,10 @@ class OrderCard extends StatelessWidget {
               ),
             ],
           ),
-          OrderStatusChip(text: order.statusText, color: order.statusColor),
+          OrderStatusChip(
+            text: context.tr(order.statusText),
+            color: order.statusColor,
+          ),
         ],
       ),
     );
@@ -152,7 +156,9 @@ class OrderCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${order.items.length} منتجات',
+                context.trArgs('{count} منتجات', {
+                  'count': order.items.length,
+                }),
                 style: AppTypography.bodyMedium.copyWith(
                   color: context.appMutedText,
                 ),
@@ -174,7 +180,7 @@ class OrderCard extends StatelessWidget {
   Widget _buildDiscountBadge(BuildContext context) {
     final label = order.appliedDiscountName == null ||
             order.appliedDiscountName!.isEmpty
-        ? 'خصم مطبق'
+        ? context.tr('خصم مطبق')
         : order.appliedDiscountName!;
 
     return Container(
@@ -209,7 +215,7 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActions() {
+  Widget _buildActions(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
@@ -220,7 +226,7 @@ class OrderCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onTap,
                   icon: const Icon(Icons.remove_red_eye, size: 18),
-                  label: const Text('تفاصيل الطلب'),
+                  label: Text(context.tr('تفاصيل الطلب')),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: AppColors.primary),
                     shape: RoundedRectangleBorder(
@@ -235,9 +241,9 @@ class OrderCard extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onTrack,
                   icon: const Icon(Icons.track_changes, size: 18),
-                  label: const Text(
-                    'تتبع الطلب',
-                    style: TextStyle(color: AppColors.white),
+                  label: Text(
+                    context.tr('تتبع الطلب'),
+                    style: const TextStyle(color: AppColors.white),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: order.isTrackingFinished
@@ -265,7 +271,11 @@ class OrderCard extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.cancel_outlined, size: 18),
-                label: Text(isCancelling ? 'جاري إلغاء الطلب' : 'إلغاء الطلب'),
+                label: Text(
+                  isCancelling
+                      ? context.tr('جاري إلغاء الطلب')
+                      : context.tr('إلغاء الطلب'),
+                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.error,
                   side: BorderSide(color: AppColors.error),

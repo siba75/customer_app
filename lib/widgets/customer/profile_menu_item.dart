@@ -1,4 +1,5 @@
 // lib/widgets/profile/profile_menu_item.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -43,13 +44,13 @@ class ProfileMenuItem extends StatelessWidget {
         ),
       ),
       title: Text(
-        title,
+        context.tr(title),
         style: AppTypography.titleSmall.copyWith(
           color: isLogout ? AppColors.error : context.appText,
         ),
       ),
       subtitle: Text(
-        subtitle,
+        context.tr(subtitle),
         style: AppTypography.bodySmall.copyWith(color: context.appMutedText),
       ),
       trailing:

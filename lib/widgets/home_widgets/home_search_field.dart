@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -25,7 +26,7 @@ class HomeSearchField extends StatelessWidget {
           controller: controller,
           textAlign: TextAlign.right,
           decoration: InputDecoration(
-            hintText: 'ابحث عن منتج...',
+            hintText: context.tr('ابحث عن منتج...'),
             hintStyle: AppTypography.bodyMedium.copyWith(
               color: context.appMutedText,
             ),

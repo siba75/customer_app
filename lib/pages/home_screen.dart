@@ -20,6 +20,7 @@ import 'package:customer_app/dio/notifications_api.dart';
 import 'package:customer_app/dio/order_api.dart';
 import 'package:customer_app/dio/product_api.dart';
 import 'package:customer_app/pages/cart_screen.dart';
+import 'package:customer_app/pages/discounts_screen.dart';
 import 'package:customer_app/pages/loyalty_rewards_screen.dart';
 import 'package:customer_app/pages/orders_screen.dart';
 import 'package:customer_app/pages/profile_screen.dart';
@@ -114,6 +115,7 @@ class _HomeViewState extends State<_HomeView> {
               fullName: profile?.fullName,
               loyaltyPoints: profile?.loyaltyPoints ?? 250,
               onLoyaltyTap: _openLoyaltyRewards,
+              onDiscountsTap: _openDiscounts,
             ),
           ),
           body: _currentIndex == 0 ? _buildHomeTab() : _buildOtherScreen(),
@@ -158,6 +160,18 @@ class _HomeViewState extends State<_HomeView> {
 
     if (!mounted) return;
     context.read<CustomerProfileCubit>().loadProfile();
+    context.read<CartCubit>().loadDiscounts();
+  }
+
+  Future<void> _openDiscounts() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DiscountsScreen(cartCubit: context.read<CartCubit>()),
+      ),
+    );
+
+    if (!mounted) return;
     context.read<CartCubit>().loadDiscounts();
   }
 

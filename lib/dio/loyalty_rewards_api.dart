@@ -51,7 +51,7 @@ class LoyaltyRewardsApi {
   }
 
   Future<Options> _authOptions() async {
-    final token = await SecureStorage.read('auth_token');
+    final token = await SecureStorage.read(SecureStorage.authTokenKey);
 
     if (token == null || token.isEmpty) {
       throw Exception('انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى.');

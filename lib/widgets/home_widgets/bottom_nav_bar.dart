@@ -1,4 +1,5 @@
 // lib/core/widgets/bottom_nav_bar.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:flutter/material.dart';
@@ -115,7 +116,7 @@ class _BottomNavItem extends StatelessWidget {
     return Semantics(
       selected: isSelected,
       button: true,
-      label: item.label,
+      label: context.tr(item.label),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
@@ -180,7 +181,7 @@ class _BottomNavItem extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    item.label,
+                    context.tr(item.label),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,

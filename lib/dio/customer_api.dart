@@ -70,7 +70,7 @@ class CustomerApi {
   }
 
   Future<Options> _authOptions() async {
-    final token = await SecureStorage.read('auth_token');
+    final token = await SecureStorage.read(SecureStorage.authTokenKey);
 
     if (token == null || token.isEmpty) {
       throw const CustomerSessionExpiredException();

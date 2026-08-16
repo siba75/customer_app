@@ -1,4 +1,5 @@
 // lib/screens/checkout_screen.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -50,19 +51,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final cartState = cartCubit.state;
 
       if (cartState.items.isEmpty) {
-        throw Exception('السلة فارغة، الرجاء إضافة منتجات قبل تأكيد الطلب.');
+        throw Exception(
+          context.tr('السلة فارغة، الرجاء إضافة منتجات قبل تأكيد الطلب.'),
+        );
       }
 
       final invalidStockItem = _firstInvalidStockItem(cartState.items);
       if (invalidStockItem != null) {
         throw Exception(
-          'الكمية المطلوبة من ${invalidStockItem.name} أكبر من المخزون المتاح (${invalidStockItem.maxQuantity}).',
+          context.trArgs(
+            'الكمية المطلوبة من {name} أكبر من المخزون المتاح ({quantity}).',
+            {
+              'name': invalidStockItem.name,
+              'quantity': invalidStockItem.maxQuantity,
+            },
+          ),
         );
       }
 
       final deliveryAddress = _deliveryAddress();
       if (_selectedAddress == 'custom' && deliveryAddress == null) {
-        throw Exception('الرجاء إدخال عنوان التوصيل.');
+        throw Exception(context.tr('الرجاء إدخال عنوان التوصيل.'));
       }
 
       final order = await context.read<OrderCubit>().createOrder(
@@ -174,7 +183,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'تم تقديم الطلب بنجاح!',
+              context.tr('تم تقديم الطلب بنجاح!'),
               style: AppTypography.headlineSmall.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -182,14 +191,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'رقم الطلب: ${_createdOrderNumber ?? 'غير متوفر'}',
+              context.trArgs('رقم الطلب: {number}', {
+                'number': _createdOrderNumber ?? context.tr('غير متوفر'),
+              }),
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appMutedText,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'شكراً لتسوقك معنا',
+              context.tr('شكراً لتسوقك معنا'),
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appMutedText,
               ),
@@ -211,7 +222,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: Text(
-                      'مواصلة التسوق',
+                      context.tr('مواصلة التسوق'),
                       style: TextStyle(color: context.appMutedText),
                     ),
                   ),
@@ -239,9 +250,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text(
-                      'عرض طلباتي',
-                      style: TextStyle(color: AppColors.white),
+                    child: Text(
+                      context.tr('عرض طلباتي'),
+                      style: const TextStyle(color: AppColors.white),
                     ),
                   ),
                 ),
@@ -260,7 +271,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         return Scaffold(
           backgroundColor: context.appBackground,
           appBar: AppBar(
-            title: const Text('إتمام الطلب'),
+            title: Text(context.tr('إتمام الطلب')),
             centerTitle: true,
             elevation: 0,
             backgroundColor: Colors.transparent,
@@ -331,7 +342,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          label,
+          context.tr(label),
           style: AppTypography.titleMedium.copyWith(
             color: isActive ? AppColors.primary : AppColors.grey,
             fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
@@ -352,7 +363,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: Text(
-        title,
+        context.tr(title),
         style: AppTypography.titleMedium.copyWith(
           color: context.appText,
           fontWeight: FontWeight.w700,
@@ -405,7 +416,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               // ignore: deprecated_member_use
               onChanged: (value) => setState(() => _selectedAddress = value!),
               title: Text(
-                'عنوان حسابي',
+                context.tr('عنوان حسابي'),
                 style: TextStyle(color: context.appText),
               ),
               subtitle: Text(
@@ -433,11 +444,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             // ignore: deprecated_member_use
             onChanged: (value) => setState(() => _selectedAddress = value!),
             title: Text(
-              hasProfileAddress ? 'عنوان آخر' : 'عنوان التوصيل',
+              hasProfileAddress
+                  ? context.tr('عنوان آخر')
+                  : context.tr('عنوان التوصيل'),
               style: TextStyle(color: context.appText),
             ),
             subtitle: Text(
-              'اكتب العنوان الذي تريد استلام الطلب عليه',
+              context.tr('اكتب العنوان الذي تريد استلام الطلب عليه'),
               style: TextStyle(color: context.appMutedText),
             ),
             secondary: Container(
@@ -462,7 +475,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 maxLines: 2,
                 textInputAction: TextInputAction.done,
                 decoration: InputDecoration(
-                  hintText: 'مثال: دمشق - باب شرقي - شارع النصر',
+                  hintText: context.tr('مثال: دمشق - باب شرقي - شارع النصر'),
                   hintStyle: AppTypography.bodyMedium.copyWith(
                     color: AppColors.grey,
                   ),
@@ -509,7 +522,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 18),
               child: Text(
-                'السلة فارغة',
+                context.tr('السلة فارغة'),
                 style: AppTypography.bodyMedium.copyWith(
                   color: context.appMutedText,
                 ),
@@ -602,7 +615,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'الكمية: ${item.quantity}',
+                  context.trArgs('الكمية: {quantity}', {
+                    'quantity': item.quantity,
+                  }),
                   style: AppTypography.titleMedium.copyWith(
                     color: context.appMutedText,
                   ),
@@ -614,7 +629,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${item.total.toStringAsFixed(2)} ل.س',
+                context.money(item.total),
                 style: AppTypography.titleMedium.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,
@@ -634,14 +649,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     bool isStrong = false,
   }) {
     final formattedValue = value < 0
-        ? '-${value.abs().toStringAsFixed(2)} ل.س'
-        : '${value.toStringAsFixed(2)} ل.س';
+        ? '-${context.money(value.abs())}'
+        : context.money(value);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          label,
+          context.tr(label),
           style: AppTypography.bodyMedium.copyWith(
             color: isStrong ? context.appText : context.appMutedText,
             fontWeight: isStrong ? FontWeight.w900 : FontWeight.w600,
@@ -660,9 +675,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   String _discountLabel(CartState state) {
     if (state.discountName != null && state.discountName!.isNotEmpty) {
-      return 'الخصم - ${state.discountName}';
+      return '${context.tr('الخصم')} - ${state.discountName}';
     }
-    return 'الخصم';
+    return context.tr('الخصم');
   }
 
   Widget _buildLoyaltySection(CartState state) {
@@ -715,7 +730,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'رصيدك: $availablePoints نقطة',
+                        context.trArgs('رصيدك: {points} نقطة', {
+                          'points': availablePoints,
+                        }),
                         style: AppTypography.titleSmall.copyWith(
                           color: context.appText,
                           fontWeight: FontWeight.w900,
@@ -723,7 +740,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'اضغطي هنا لاختيار مكافأة. بعد الاستبدال تتحول النقاط إلى خصم صالح للطلب.',
+                        context.tr(
+                          'اضغطي هنا لاختيار مكافأة. بعد الاستبدال تتحول النقاط إلى خصم صالح للطلب.',
+                        ),
                         style: AppTypography.bodySmall.copyWith(
                           color: context.appMutedText,
                         ),
@@ -772,11 +791,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             onChanged: (value) =>
                 setState(() => _selectedPaymentMethod = value!),
             title: Text(
-              'الدفع عند الاستلام حصرا',
+              context.tr('الدفع عند الاستلام حصرا'),
               style: AppTypography.titleLarge.copyWith(color: context.appText),
             ),
             subtitle: Text(
-              'ادفع نقداً عند استلام طلبك',
+              context.tr('ادفع نقداً عند استلام طلبك'),
               style: TextStyle(color: context.appMutedText),
             ),
             secondary: Container(
@@ -821,14 +840,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'المبلغ للدفع',
+                    context.tr('المبلغ للدفع'),
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.grey,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${(invoice['total'] ?? 0).toStringAsFixed(2)} ل.س',
+                    context.money(invoice['total'] ?? 0),
                     style: AppTypography.headlineSmall.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
@@ -861,15 +880,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'تأكيد الطلب',
-                            style: TextStyle(color: AppColors.white),
+                            context.tr('تأكيد الطلب'),
+                            style: const TextStyle(color: AppColors.white),
                           ),
-                          SizedBox(width: 8),
-                          Icon(Icons.arrow_forward, size: 18),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward, size: 18),
                         ],
                       ),
               ),
@@ -896,11 +915,16 @@ class _CheckoutLoyaltyGuide extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = hasAppliedDiscount ? AppColors.success : AppColors.primary;
     final title = hasAppliedDiscount
-        ? 'خصم جاهز مطبق على طلبك'
-        : 'بشو أستبدل النقاط؟';
+        ? context.tr('خصم جاهز مطبق على طلبك')
+        : context.tr('بشو أستبدل النقاط؟');
     final subtitle = hasAppliedDiscount
-        ? '${discountName ?? 'خصم متاح'} وفر عليك ${discountAmount.toStringAsFixed(2)} ل.س.'
-        : 'اختاري عرضاً من صفحة مكافآت الولاء. بعد الاستبدال يتحول العرض إلى خصم، ويطبقه النظام هنا عندما يكون أفضل خصم متاح للطلب.';
+        ? context.trArgs('{name} وفر عليك {amount}.', {
+            'name': discountName ?? context.tr('خصم متاح'),
+            'amount': context.money(discountAmount),
+          })
+        : context.tr(
+            'اختاري عرضاً من صفحة مكافآت الولاء. بعد الاستبدال يتحول العرض إلى خصم، ويطبقه النظام هنا عندما يكون أفضل خصم متاح للطلب.',
+          );
 
     return Container(
       padding: const EdgeInsets.all(14),

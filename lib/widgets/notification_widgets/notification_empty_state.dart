@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -36,7 +37,7 @@ class NotificationEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             Text(
-              title,
+              context.tr(title),
               style: AppTypography.headlineSmall.copyWith(
                 color: context.appText,
               ),
@@ -44,7 +45,7 @@ class NotificationEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              subtitle,
+              context.tr(subtitle),
               style: AppTypography.bodyMedium.copyWith(
                 color: context.appMutedText,
               ),

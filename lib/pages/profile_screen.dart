@@ -1,10 +1,13 @@
 // lib/screens/profile/profile_screen.dart
 import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/core/localization/app_localizations.dart';
+import 'package:customer_app/core/localization/language_controller.dart';
 import 'package:customer_app/core/services/notification_service.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:customer_app/core/theem/theme_controller.dart';
+import 'package:customer_app/cubit_folder/cart_cubit.dart';
 import 'package:customer_app/cubit_folder/customer_profile_cubit.dart';
 import 'package:customer_app/cubit_folder/customer_profile_state.dart';
 import 'package:customer_app/cubit_folder/order_cubit.dart';
@@ -12,6 +15,7 @@ import 'package:customer_app/cubit_folder/order_state.dart';
 import 'package:customer_app/dio/customer_api.dart';
 import 'package:customer_app/dio/order_api.dart';
 import 'package:customer_app/model/customer_profile_model.dart';
+import 'package:customer_app/pages/discounts_screen.dart';
 import 'package:customer_app/pages/login_screen.dart';
 import 'package:customer_app/pages/loyalty_rewards_screen.dart';
 import 'package:customer_app/pages/notifications_screen.dart';
@@ -151,7 +155,7 @@ class _StatsSection extends StatelessWidget {
               Expanded(
                 child: ProfileStatsCard(
                   title: 'إجمالي الشراء',
-                  value: _formatTotalSpent(profile.totalSpent),
+                  value: context.money(profile.totalSpent),
                   icon: Icons.payments_outlined,
                   color: AppColors.success,
                 ),
@@ -160,12 +164,6 @@ class _StatsSection extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  String _formatTotalSpent(double totalSpent) {
-    return totalSpent.toStringAsFixed(
-      totalSpent.truncateToDouble() == totalSpent ? 0 : 2,
     );
   }
 }
@@ -192,6 +190,26 @@ class _MenuSection extends StatelessWidget {
         showChevron: false,
       ),
       _item(
+        Icons.local_offer_outlined,
+        'الخصومات',
+        'العروض العامة والخاصة بحسابك',
+        () {
+          CartCubit? cartCubit;
+          try {
+            cartCubit = context.read<CartCubit>();
+          } catch (_) {
+            cartCubit = null;
+          }
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DiscountsScreen(cartCubit: cartCubit),
+            ),
+          );
+        },
+      ),
+      _item(
         Icons.card_giftcard_outlined,
         'مكافآت الولاء',
         'العروض المتاحة حسب نقاطك',
@@ -213,7 +231,7 @@ class _MenuSection extends StatelessWidget {
       _item(
         Icons.language_outlined,
         'اللغة',
-        'العربية (Arabic)',
+        LanguageController.isArabic ? 'العربية (Arabic)' : 'English',
         () => _showLanguageDialog(context),
       ),
       _item(
@@ -342,7 +360,7 @@ class _MenuSection extends StatelessWidget {
   void _snack(BuildContext context) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('جاري التطوير...')));
+    ).showSnackBar(SnackBar(content: Text(context.tr('جاري التطوير...'))));
   }
 
   void _showEditProfileSheet(
@@ -372,26 +390,30 @@ class _MenuSection extends StatelessWidget {
         children: [
           const SizedBox(height: 16),
           Text(
-            'اختر اللغة',
+            context.tr('اختر اللغة'),
             style: AppTypography.titleMedium.copyWith(color: context.appText),
           ),
-          _lang(context, 'العربية', true),
-          _lang(context, 'English', false),
+          _lang(context, 'العربية', LanguageController.arabicCode),
+          _lang(context, 'English', LanguageController.englishCode),
         ],
       ),
     );
   }
 
-  Widget _lang(BuildContext context, String lang, bool selected) {
+  Widget _lang(BuildContext context, String lang, String languageCode) {
+    final selected =
+        LanguageController.locale.value.languageCode == languageCode;
+
     return ListTile(
       leading: Icon(
         selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
         color: selected ? AppColors.primary : AppColors.grey,
       ),
-      title: Text(lang, style: TextStyle(color: context.appText)),
-      onTap: () {
+      title: Text(context.tr(lang), style: TextStyle(color: context.appText)),
+      onTap: () async {
+        await LanguageController.setLanguage(languageCode);
+        if (!context.mounted) return;
         Navigator.pop(context);
-        _snack(context);
       },
     );
   }
@@ -399,9 +421,9 @@ class _MenuSection extends StatelessWidget {
   void _showAppInfoDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => const AlertDialog(
-        title: Text('عن التطبيق'),
-        content: Text('Smart Store\nالإصدار 1.0.0'),
+      builder: (_) => AlertDialog(
+        title: Text(context.tr('عن التطبيق')),
+        content: Text('Smart Store\n${context.tr('الإصدار 1.0.0')}'),
       ),
     );
   }
@@ -410,17 +432,16 @@ class _MenuSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('تسجيل الخروج'),
-        content: const Text('هل أنت متأكد؟'),
+        title: Text(context.tr('تسجيل الخروج')),
+        content: Text(context.tr('هل أنت متأكد؟')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
+            child: Text(context.tr('إلغاء')),
           ),
           ElevatedButton(
             onPressed: () async {
-              await SecureStorage.delete('auth_token');
-              await SecureStorage.delete('user_email');
+              await SecureStorage.clearAuthSession();
               NotificationService.disconnectSocketNotifications();
 
               if (!context.mounted) return;
@@ -430,7 +451,10 @@ class _MenuSection extends StatelessWidget {
                 (route) => false,
               );
             },
-            child: const Text('خروج', style: TextStyle(color: AppColors.white)),
+            child: Text(
+              context.tr('خروج'),
+              style: const TextStyle(color: AppColors.white),
+            ),
           ),
         ],
       ),
@@ -520,7 +544,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      'تعديل معلومات الحساب',
+                      context.tr('تعديل معلومات الحساب'),
                       style: AppTypography.titleLarge.copyWith(
                         color: context.appText,
                         fontWeight: FontWeight.w900,
@@ -529,14 +553,14 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     const SizedBox(height: 16),
                     _field(
                       controller: _nameController,
-                      label: 'الاسم الكامل',
+                      label: context.tr('الاسم الكامل'),
                       icon: Icons.person_outline,
                       validator: _requiredValidator,
                     ),
                     const SizedBox(height: 12),
                     _field(
                       controller: _phoneController,
-                      label: 'رقم الهاتف',
+                      label: context.tr('رقم الهاتف'),
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
                       validator: _requiredValidator,
@@ -544,7 +568,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     const SizedBox(height: 12),
                     _field(
                       controller: _addressController,
-                      label: 'العنوان',
+                      label: context.tr('العنوان'),
                       icon: Icons.location_on_outlined,
                       validator: _requiredValidator,
                     ),
@@ -563,9 +587,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                                   color: AppColors.white,
                                 ),
                               )
-                            : const Text(
-                                'حفظ التعديلات',
-                                style: TextStyle(color: AppColors.white),
+                            : Text(
+                                context.tr('حفظ التعديلات'),
+                                style: const TextStyle(color: AppColors.white),
                               ),
                       ),
                     ),
@@ -596,7 +620,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
   String? _requiredValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'هذا الحقل مطلوب';
+      return AppLocalizations.translate('هذا الحقل مطلوب');
     }
     return null;
   }
@@ -630,9 +654,9 @@ class _ProfileErrorView extends StatelessWidget {
               const SizedBox(height: 18),
               ElevatedButton(
                 onPressed: onRetry,
-                child: const Text(
-                  'إعادة المحاولة',
-                  style: TextStyle(color: AppColors.white),
+                child: Text(
+                  context.tr('إعادة المحاولة'),
+                  style: const TextStyle(color: AppColors.white),
                 ),
               ),
             ],

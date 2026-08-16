@@ -1,4 +1,5 @@
 // lib/widgets/orders/order_filter_chips.dart
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:flutter/material.dart';
 
@@ -38,7 +39,7 @@ class OrderFilterChips extends StatelessWidget {
           final filter = _filters[index];
           final isSelected = selectedFilter == filter['id'];
           return FilterChip(
-            label: Text(filter['label'] as String),
+            label: Text(context.tr(filter['label'] as String)),
             selected: isSelected,
             onSelected: (_) => onFilterChanged(filter['id'] as String),
             avatar: Icon(filter['icon'] as IconData, size: 18),

@@ -1,4 +1,10 @@
 {
   "java.configuration.updateBuildConfiguration": "interactive",
-  "java.import.gradle.user.home": "D:\\customer_app\\.gradle-user"
+  "java.import.gradle.user.home": "D:\\customer_app\\.gradle-user",
+  "dart.flutterRunAdditionalArgs": [
+    "--dart-define=API_BASE_URL=http://192.168.1.6:3000"
+  ],
+  "dart.flutterAdditionalArgs": [
+    "--dart-define=API_BASE_URL=http://192.168.1.6:3000"
+  ]
 }

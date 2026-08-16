@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
@@ -49,7 +50,10 @@ class CartSummaryCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _SummaryRow(label: 'المجموع قبل الخصم', value: subtotal),
+                  _SummaryRow(
+                    label: context.tr('المجموع قبل الخصم'),
+                    value: subtotal,
+                  ),
                   if (isCalculatingDiscount) ...[
                     const SizedBox(height: 10),
                     const _CalculatingDiscountRow(),
@@ -58,8 +62,8 @@ class CartSummaryCard extends StatelessWidget {
                     const SizedBox(height: 10),
                     _SummaryRow(
                       label: discountName == null || discountName!.isEmpty
-                          ? 'الخصم'
-                          : 'الخصم - $discountName',
+                          ? context.tr('الخصم')
+                          : '${context.tr('الخصم')} - $discountName',
                       value: -discount,
                       valueColor: AppColors.success,
                     ),
@@ -68,7 +72,7 @@ class CartSummaryCard extends StatelessWidget {
                   Divider(height: 1, color: context.appSoftBorder),
                   const SizedBox(height: 10),
                   _SummaryRow(
-                    label: 'الإجمالي للدفع',
+                    label: context.tr('الإجمالي للدفع'),
                     value: total,
                     valueColor: AppColors.primary,
                   ),
@@ -83,14 +87,14 @@ class CartSummaryCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'المبلغ للدفع',
+                        context.tr('المبلغ للدفع'),
                         style: AppTypography.bodyMedium.copyWith(
                           color: context.appMutedText,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${total.toStringAsFixed(2)} ل.س',
+                        context.money(total),
                         style: AppTypography.headlineSmall.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w900,
@@ -107,9 +111,9 @@ class CartSummaryCard extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: onCheckout,
                       icon: const Icon(Icons.lock_outline, size: 18),
-                      label: const Text(
-                        'إتمام الطلب',
-                        style: TextStyle(color: AppColors.white),
+                      label: Text(
+                        context.tr('إتمام الطلب'),
+                        style: const TextStyle(color: AppColors.white),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
@@ -140,7 +144,7 @@ class _CalculatingDiscountRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'حساب الخصم',
+          context.tr('حساب الخصم'),
           style: AppTypography.bodyMedium.copyWith(color: context.appMutedText),
         ),
         const SizedBox(
@@ -167,8 +171,8 @@ class _SummaryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formattedValue = value < 0
-        ? '-${value.abs().toStringAsFixed(2)} ل.س'
-        : '${value.toStringAsFixed(2)} ل.س';
+        ? '-${context.money(value.abs())}'
+        : context.money(value);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

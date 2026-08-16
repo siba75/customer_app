@@ -1,3 +1,4 @@
+import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:flutter/material.dart';
 
@@ -33,7 +34,9 @@ class NotificationsPage {
     }
 
     if (data is! Map<String, dynamic>) {
-      throw Exception('صيغة بيانات الإشعارات غير صحيحة.');
+      throw Exception(
+        AppLocalizations.translate('صيغة بيانات الإشعارات غير صحيحة.'),
+      );
     }
 
     final notificationsData = _readList(data);
@@ -61,7 +64,9 @@ class NotificationsPage {
       if (value is List) return value;
     }
 
-    throw Exception('صيغة بيانات الإشعارات غير صحيحة.');
+    throw Exception(
+      AppLocalizations.translate('صيغة بيانات الإشعارات غير صحيحة.'),
+    );
   }
 
   static int? _readInt(dynamic value) {
@@ -189,17 +194,29 @@ class CustomerNotification {
     final now = DateTime.now();
     final difference = now.difference(createdAt!);
 
-    if (difference.inMinutes < 1) return 'الآن';
-    if (difference.inMinutes < 60) return 'منذ ${difference.inMinutes} دقيقة';
-    if (difference.inHours < 24) return 'منذ ${difference.inHours} ساعة';
-    if (difference.inDays == 1) return 'أمس';
-    if (difference.inDays < 7) return 'منذ ${difference.inDays} أيام';
+    if (difference.inMinutes < 1) return AppLocalizations.translate('الآن');
+    if (difference.inMinutes < 60) {
+      return AppLocalizations.translateWithArgs('منذ {count} دقيقة', {
+        'count': difference.inMinutes,
+      });
+    }
+    if (difference.inHours < 24) {
+      return AppLocalizations.translateWithArgs('منذ {count} ساعة', {
+        'count': difference.inHours,
+      });
+    }
+    if (difference.inDays == 1) return AppLocalizations.translate('أمس');
+    if (difference.inDays < 7) {
+      return AppLocalizations.translateWithArgs('منذ {count} أيام', {
+        'count': difference.inDays,
+      });
+    }
 
     return '${createdAt!.day}/${createdAt!.month}/${createdAt!.year}';
   }
 
   String get receivedTime {
-    if (createdAt == null) return 'وقت غير محدد';
+    if (createdAt == null) return AppLocalizations.translate('وقت غير محدد');
 
     final hour = createdAt!.hour.toString().padLeft(2, '0');
     final minute = createdAt!.minute.toString().padLeft(2, '0');

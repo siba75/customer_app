@@ -1,5 +1,5 @@
 import 'package:customer_app/core/const/config.dart';
-import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/dio/api_auth.dart';
 import 'package:customer_app/model/cart_item_model.dart';
 import 'package:customer_app/model/order_model.dart';
 import 'package:dio/dio.dart';
@@ -14,11 +14,12 @@ class OrderApi {
     try {
       final response = await _dio.get(
         ApiConfig.customerOrdersEndpoint,
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return _readOrdersList(response.data);
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل الطلبات.');
     }
   }
@@ -27,11 +28,12 @@ class OrderApi {
     try {
       final response = await _dio.get(
         '${ApiConfig.customerOrdersEndpoint}/$id',
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return Order.fromJson(_readOrderMap(response.data));
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل تفاصيل الطلب.');
     }
   }
@@ -61,11 +63,12 @@ class OrderApi {
             'deliveryAddress': deliveryAddress.trim(),
           'items': orderItems,
         },
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return Order.fromJson(_readOrderMap(response.data));
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر إنشاء الطلب.');
     }
   }
@@ -74,23 +77,14 @@ class OrderApi {
     try {
       final response = await _dio.patch(
         '${ApiConfig.customerOrdersEndpoint}/$id/cancel',
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return Order.fromJson(_readOrderMap(response.data));
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر إلغاء الطلب.');
     }
-  }
-
-  Future<Options> _authOptions() async {
-    final token = await SecureStorage.read('auth_token');
-
-    if (token == null || token.isEmpty) {
-      throw Exception('انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى.');
-    }
-
-    return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
   Map<String, dynamic> _asMap(dynamic data) {
