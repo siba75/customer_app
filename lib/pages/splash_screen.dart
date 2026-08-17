@@ -8,9 +8,11 @@ import 'package:customer_app/core/services/notification_service.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:customer_app/dio/api_auth.dart';
 import 'package:customer_app/dio/customer_api.dart';
 import 'package:customer_app/pages/home_screen.dart';
 import 'package:customer_app/pages/login_screen.dart';
+import 'package:customer_app/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -90,9 +92,21 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<_SessionCheckResult> _resolveSavedSession() async {
-    final token = await SecureStorage.read(SecureStorage.authTokenKey);
-    if (token == null || token.isEmpty) {
+    final token = await ApiAuth.accessToken();
+    final refreshToken = await SecureStorage.read(
+      SecureStorage.refreshTokenKey,
+    );
+    if ((token == null || token.isEmpty) &&
+        (refreshToken == null || refreshToken.isEmpty)) {
       return const _SessionCheckResult(_SessionStatus.unauthenticated);
+    }
+    if (token == null || token.isEmpty) {
+      return _SessionCheckResult(
+        _SessionStatus.serverUnavailable,
+        message: ApiConfig.isLocalhost
+            ? 'التطبيق لا يستطيع الوصول للسيرفر. تأكدي أن adb reverse مفعّل وأن السيرفر يعمل على المنفذ 3000.'
+            : 'تعذر الاتصال بالسيرفر. تأكدي أن السيرفر يعمل على المنفذ 3000 وأن الموبايل واللابتوب على نفس الشبكة.',
+      );
     }
 
     try {
@@ -374,36 +388,21 @@ class _StoreLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 132,
-      height: 132,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.secondary.withValues(alpha: 0.26),
-            blurRadius: 42,
-            spreadRadius: 8,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Container(
-        margin: const EdgeInsets.all(10),
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          shape: BoxShape.circle,
+    return AppLogo(
+      size: 142,
+      borderRadius: 36,
+      shadows: [
+        BoxShadow(
+          color: AppColors.secondary.withValues(alpha: 0.25),
+          blurRadius: 42,
+          spreadRadius: 8,
         ),
-        child: const Icon(
-          Icons.storefront_rounded,
-          size: 66,
-          color: AppColors.primary,
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.22),
+          blurRadius: 24,
+          offset: const Offset(0, 14),
         ),
-      ),
+      ],
     );
   }
 }

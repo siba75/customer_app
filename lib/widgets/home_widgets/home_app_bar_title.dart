@@ -6,6 +6,7 @@ import 'package:customer_app/cubit_folder/notifications_cubit.dart';
 import 'package:customer_app/cubit_folder/notifications_state.dart';
 import 'package:customer_app/pages/discounts_screen.dart';
 import 'package:customer_app/pages/notifications_screen.dart';
+import 'package:customer_app/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -61,16 +62,7 @@ class HomeAppBarTitle extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        CircleAvatar(
-          backgroundColor: AppColors.primarySoft,
-          child: Text(
-            _avatarInitial(fullName),
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
+        const AppLogo(size: 42, borderRadius: 12),
       ],
     );
   }
@@ -79,12 +71,6 @@ class HomeAppBarTitle extends StatelessWidget {
     final name = value?.trim();
     if (name == null || name.isEmpty) return null;
     return name.split(RegExp(r'\s+')).first;
-  }
-
-  String _avatarInitial(String? value) {
-    final name = _firstName(value);
-    if (name == null || name.isEmpty) return '؟';
-    return name.characters.first.toUpperCase();
   }
 }
 

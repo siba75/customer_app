@@ -7,7 +7,7 @@ class CategoryApi {
   final Dio _dio;
 
   CategoryApi([Dio? dio])
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+    : _dio = dio ?? ApiAuth.createDio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
   Future<List<CategoryModel>> getCategories() async {
     try {

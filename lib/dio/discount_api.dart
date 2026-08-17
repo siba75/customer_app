@@ -8,7 +8,7 @@ class DiscountApi {
   final Dio _dio;
 
   DiscountApi([Dio? dio])
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+    : _dio = dio ?? ApiAuth.createDio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
   Future<List<DiscountModel>> getActiveDiscounts() async {
     try {

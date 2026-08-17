@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:customer_app/core/const/config.dart';
 import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/dio/api_auth.dart';
 import 'package:customer_app/dio/notifications_api.dart';
 import 'package:customer_app/pages/notifications_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -92,7 +93,7 @@ class NotificationService {
   }
 
   static Future<void> connectSocketNotifications() async {
-    final token = await SecureStorage.read(SecureStorage.authTokenKey);
+    final token = await ApiAuth.accessToken();
     if (token == null || token.isEmpty) return;
 
     final currentSocket = _socket;
@@ -173,7 +174,7 @@ class NotificationService {
   }
 
   static Future<void> startInboxFallbackPolling() async {
-    final token = await SecureStorage.read(SecureStorage.authTokenKey);
+    final token = await ApiAuth.accessToken();
     if (token == null || token.isEmpty) return;
 
     await _pollUnreadInbox(showNewNotifications: _inboxPollingSeeded);
@@ -291,7 +292,7 @@ class NotificationService {
   }
 
   static Future<void> _sendTokenToBackend(String token) async {
-    final authToken = await SecureStorage.read(SecureStorage.authTokenKey);
+    final authToken = await ApiAuth.accessToken();
     if (authToken == null || authToken.isEmpty) return;
 
     try {
@@ -352,6 +353,7 @@ class NotificationService {
           importance: Importance.high,
           priority: Priority.high,
           icon: 'ic_notification',
+          largeIcon: const DrawableResourceAndroidBitmap('app_logo'),
           color: const Color(0xFF4F46E5),
         ),
       ),
@@ -362,9 +364,9 @@ class NotificationService {
     final context = navigatorKey.currentContext;
     if (context == null) return;
 
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
   }
 
   static bool get _isAndroid {

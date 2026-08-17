@@ -12,6 +12,7 @@ import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
 import 'package:customer_app/pages/otp_verification_screen.dart';
+import 'package:customer_app/widgets/app_logo.dart';
 import 'package:customer_app/widgets/responsive_keyboard_page.dart';
 
 import 'login_screen.dart';
@@ -71,20 +72,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // أيقونة
                   Center(
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.store,
-                        size: 44,
-                        color: AppColors.white,
-                      ),
+                    child: AppLogo(
+                      size: 92,
+                      borderRadius: 24,
+                      shadows: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.24),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -105,8 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       labelText: context.tr('الاسم الكامل'),
                       prefixIcon: const Icon(Icons.person_outline),
                     ),
-                    validator: (v) =>
-                        (v?.isEmpty ?? true)
+                    validator: (v) => (v?.isEmpty ?? true)
                         ? context.tr('الرجاء إدخال الاسم')
                         : null,
                   ),
@@ -121,8 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       labelText: context.tr('البريد الإلكتروني'),
                       prefixIcon: const Icon(Icons.email_outlined),
                     ),
-                    validator: (v) =>
-                        (v?.isEmpty ?? true)
+                    validator: (v) => (v?.isEmpty ?? true)
                         ? context.tr('الرجاء إدخال البريد')
                         : null,
                   ),
@@ -137,8 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       labelText: context.tr('رقم الهاتف'),
                       prefixIcon: const Icon(Icons.phone_outlined),
                     ),
-                    validator: (v) =>
-                        (v?.isEmpty ?? true)
+                    validator: (v) => (v?.isEmpty ?? true)
                         ? context.tr('الرجاء إدخال رقم الهاتف')
                         : null,
                   ),
@@ -226,8 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       labelText: context.tr('رقم الهوية'),
                       prefixIcon: const Icon(Icons.card_membership_outlined),
                     ),
-                    validator: (v) =>
-                        (v?.isEmpty ?? true)
+                    validator: (v) => (v?.isEmpty ?? true)
                         ? context.tr('الرجاء إدخال رقم الهوية')
                         : null,
                   ),
@@ -241,6 +235,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             SecureStorage.authTokenKey,
                             state.token!,
                           );
+                          if (state.refreshToken != null &&
+                              state.refreshToken!.trim().isNotEmpty) {
+                            await SecureStorage.write(
+                              SecureStorage.refreshTokenKey,
+                              state.refreshToken!,
+                            );
+                          }
                           await NotificationService.prepareForSignedInUser();
                         }
 
@@ -281,7 +282,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         _confirmPasswordController.text) {
                                       showCustomSnackBar(
                                         context,
-                                        context.tr('كلمتا المرور غير متطابقتين'),
+                                        context.tr(
+                                          'كلمتا المرور غير متطابقتين',
+                                        ),
                                         backgroundColor: AppColors.error,
                                       );
                                       return;

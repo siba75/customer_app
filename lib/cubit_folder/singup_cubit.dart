@@ -14,12 +14,14 @@ class RegisterCubit extends Cubit<RegisterState> {
       emit(RegisterLoading());
       final data = await _api.signup(model);
       final token = AuthApi.readToken(data);
+      final refreshToken = AuthApi.readRefreshToken(data);
 
       emit(
         RegisterSuccess(
           message: data['message']?.toString() ?? 'تم إنشاء الحساب بنجاح',
           email: model.email,
           token: token?.toString(),
+          refreshToken: refreshToken?.toString(),
         ),
       );
     } catch (e) {

@@ -13,6 +13,7 @@ import 'package:customer_app/model/signin_model.dart';
 import 'package:customer_app/pages/forgot_password_screen.dart';
 import 'package:customer_app/pages/home_screen.dart';
 import 'package:customer_app/pages/register_screen.dart';
+import 'package:customer_app/widgets/app_logo.dart';
 import 'package:customer_app/widgets/responsive_keyboard_page.dart';
 import 'package:customer_app/widgets/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -83,6 +84,13 @@ class _LoginScreenState extends State<LoginScreen> {
         listener: (context, state) async {
           if (state is LoginSuccess) {
             await SecureStorage.write(SecureStorage.authTokenKey, state.token);
+            if (state.refreshToken != null &&
+                state.refreshToken!.trim().isNotEmpty) {
+              await SecureStorage.write(
+                SecureStorage.refreshTokenKey,
+                state.refreshToken!,
+              );
+            }
             await SecureStorage.write(SecureStorage.userEmailKey, state.email);
 
             if (!context.mounted) return;
@@ -178,14 +186,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildLogo() {
     return Center(
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Icon(Icons.store, size: 44, color: AppColors.white),
+      child: AppLogo(
+        size: 92,
+        borderRadius: 24,
+        shadows: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.24),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
     );
   }
@@ -223,8 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
             ),
-            validator: (value) =>
-                (value?.isEmpty ?? true)
+            validator: (value) => (value?.isEmpty ?? true)
                 ? context.tr('الرجاء إدخال كلمة المرور')
                 : null,
             onFieldSubmitted: (_) {

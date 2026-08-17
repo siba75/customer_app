@@ -7,7 +7,7 @@ class ProductApi {
   final Dio _dio;
 
   ProductApi([Dio? dio])
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+    : _dio = dio ?? ApiAuth.createDio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
   Future<List<ProductModel>> getProducts() async {
     try {

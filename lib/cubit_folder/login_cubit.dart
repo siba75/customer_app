@@ -15,6 +15,7 @@ class LoginCubit extends Cubit<LoginState> {
 
       final data = await _api.signin(model);
       final token = AuthApi.readToken(data);
+      final refreshToken = AuthApi.readRefreshToken(data);
 
       if (token == null || token.isEmpty) {
         emit(LoginError('لم يتم استلام رمز الدخول من الخادم.'));
@@ -26,6 +27,7 @@ class LoginCubit extends Cubit<LoginState> {
           message: data['message']?.toString() ?? 'تم تسجيل الدخول بنجاح',
           email: model.email,
           token: token,
+          refreshToken: refreshToken,
         ),
       );
     } catch (e) {

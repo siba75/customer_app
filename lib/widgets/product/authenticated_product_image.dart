@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:customer_app/core/const/config.dart';
-import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/dio/api_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuthenticatedProductImage extends StatelessWidget {
@@ -24,7 +24,7 @@ class AuthenticatedProductImage extends StatelessWidget {
     }
 
     return FutureBuilder<String?>(
-      future: SecureStorage.read(SecureStorage.authTokenKey),
+      future: ApiAuth.accessToken(),
       builder: (context, snapshot) {
         final token = snapshot.data;
         final needsAuthHeaders = _needsAuthHeaders;

@@ -49,7 +49,7 @@ class AuthApi {
       final message = _readErrorMessage(e);
 
       if (_isConnectionIssue(e)) {
-        throw Exception(_connectionMessage);
+        throw AuthConnectionException(_connectionMessage);
       }
 
       if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
@@ -94,6 +94,36 @@ class AuthApi {
     }
   }
 
+  Future<Map<String, dynamic>> refreshTokens(String refreshToken) async {
+    try {
+      final response = await _dio.post(
+        ApiConfig.refreshTokensEndpoint,
+        data: {'refresh_token': refreshToken},
+      );
+
+      return _asResponseMap(response.data, 'تم تجديد الجلسة بنجاح');
+    } on DioException catch (e) {
+      final message = _readErrorMessage(e);
+
+      if (_isConnectionIssue(e)) {
+        throw AuthConnectionException(_connectionMessage);
+      }
+
+      if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
+        throw Exception(
+          message ?? 'انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى.',
+        );
+      }
+
+      throw Exception(
+        AppErrorMessages.friendly(
+          message,
+          fallback: 'تعذر تجديد الجلسة، الرجاء تسجيل الدخول مرة أخرى.',
+        ),
+      );
+    }
+  }
+
   Map<String, dynamic> _asResponseMap(dynamic data, String fallbackMessage) {
     return data is Map<String, dynamic>
         ? data
@@ -119,6 +149,31 @@ class AuthApi {
             nested['token'] ??
             nested['access_token'] ??
             nested['jwt'];
+
+        if (nestedToken != null) {
+          return nestedToken.toString();
+        }
+      }
+    }
+
+    return null;
+  }
+
+  static String? readRefreshToken(Map<String, dynamic> data) {
+    final directToken =
+        data['refreshToken'] ?? data['refresh_token'] ?? data['refresh'];
+
+    if (directToken != null) {
+      return directToken.toString();
+    }
+
+    for (final key in ['data', 'user']) {
+      final nested = data[key];
+      if (nested is Map<String, dynamic>) {
+        final nestedToken =
+            nested['refreshToken'] ??
+            nested['refresh_token'] ??
+            nested['refresh'];
 
         if (nestedToken != null) {
           return nestedToken.toString();
@@ -156,4 +211,13 @@ class AuthApi {
 
     return 'تعذر الاتصال بالسيرفر. تأكد أن السيرفر يعمل على المنفذ 3000 وأن الموبايل واللابتوب على نفس الشبكة.';
   }
+}
+
+class AuthConnectionException implements Exception {
+  final String message;
+
+  const AuthConnectionException(this.message);
+
+  @override
+  String toString() => message;
 }

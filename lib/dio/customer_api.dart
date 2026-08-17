@@ -1,5 +1,5 @@
 import 'package:customer_app/core/const/config.dart';
-import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/dio/api_auth.dart';
 import 'package:customer_app/model/customer_profile_model.dart';
 import 'package:dio/dio.dart';
 
@@ -9,7 +9,7 @@ class CustomerApi {
   CustomerApi([Dio? dio])
     : _dio =
           dio ??
-          Dio(
+          ApiAuth.createDio(
             BaseOptions(
               baseUrl: ApiConfig.baseUrl,
               connectTimeout: const Duration(seconds: 12),
@@ -22,12 +22,13 @@ class CustomerApi {
     try {
       final response = await _dio.get(
         ApiConfig.customerMeEndpoint,
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return CustomerProfileModel.fromJson(_asMap(response.data));
     } on DioException catch (e) {
       if (_isUnauthorized(e)) {
+        await ApiAuth.expireSession();
         throw const CustomerSessionExpiredException();
       }
 
@@ -52,12 +53,13 @@ class CustomerApi {
           'phoneNumber': phoneNumber,
           'address': address,
         },
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return CustomerProfileModel.fromJson(_asMap(response.data));
     } on DioException catch (e) {
       if (_isUnauthorized(e)) {
+        await ApiAuth.expireSession();
         throw const CustomerSessionExpiredException();
       }
 
@@ -69,31 +71,13 @@ class CustomerApi {
     }
   }
 
-  Future<Options> _authOptions() async {
-    final token = await SecureStorage.read(SecureStorage.authTokenKey);
-
-    if (token == null || token.isEmpty) {
-      throw const CustomerSessionExpiredException();
-    }
-
-    return Options(headers: {'Authorization': 'Bearer $token'});
-  }
-
   Map<String, dynamic> _asMap(dynamic data) {
     if (data is Map<String, dynamic>) return data;
     throw Exception('صيغة بيانات الحساب غير صحيحة.');
   }
 
   String? _readErrorMessage(DioException error) {
-    final data = error.response?.data;
-
-    if (data is Map<String, dynamic>) {
-      return data['message']?.toString() ??
-          data['error']?.toString() ??
-          data['detail']?.toString();
-    }
-
-    return data?.toString();
+    return ApiAuth.readErrorMessage(error);
   }
 
   bool _isUnauthorized(DioException error) {

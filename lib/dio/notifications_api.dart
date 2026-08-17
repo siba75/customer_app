@@ -7,7 +7,7 @@ class NotificationsApi {
   final Dio _dio;
 
   NotificationsApi([Dio? dio])
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+    : _dio = dio ?? ApiAuth.createDio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
   Future<NotificationsPage> getMyNotifications({
     int limit = 10,

@@ -1,15 +1,17 @@
-
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorage {
   static const _storage = FlutterSecureStorage();
   static const authTokenKey = 'auth_token';
+  static const refreshTokenKey = 'refresh_token';
   static const userEmailKey = 'user_email';
   static const sessionNoticeKey = 'session_notice';
 
   // كتابة القيمة في التخزين الآمن
   static Future<void> write(String key, String value) async {
-    final nextValue = key == authTokenKey ? _normalizeToken(value) : value;
+    final nextValue = key == authTokenKey || key == refreshTokenKey
+        ? _normalizeToken(value)
+        : value;
     await _storage.write(key: key, value: nextValue);
   }
 
@@ -25,6 +27,7 @@ class SecureStorage {
 
   static Future<void> clearAuthSession({String? notice}) async {
     await delete(authTokenKey);
+    await delete(refreshTokenKey);
     await delete(userEmailKey);
 
     if (notice == null || notice.trim().isEmpty) {

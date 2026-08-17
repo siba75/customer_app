@@ -18,6 +18,7 @@ class ApiConfig {
 
   static const String signupEndpoint = '/authentication/customer/signup';
   static const String signinEndpoint = '/authentication/customer/signin';
+  static const String refreshTokensEndpoint = '/authentication/refresh-tokens';
   static const String verifyEndpoint = '/authentication/verify';
   static const String customerMeEndpoint = '/customer/me';
   static const String adsEndpoint = '/ads';

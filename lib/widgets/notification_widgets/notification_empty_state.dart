@@ -2,6 +2,7 @@ import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
 import 'package:customer_app/core/theem/theme_colors.dart';
+import 'package:customer_app/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 
 class NotificationEmptyState extends StatelessWidget {
@@ -22,18 +23,16 @@ class NotificationEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 112,
-              height: 112,
-              decoration: const BoxDecoration(
-                color: AppColors.primarySoft,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.notifications_none,
-                size: 54,
-                color: AppColors.primary,
-              ),
+            AppLogo(
+              size: 112,
+              borderRadius: 30,
+              shadows: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.18),
+                  blurRadius: 28,
+                  offset: const Offset(0, 14),
+                ),
+              ],
             ),
             const SizedBox(height: 22),
             Text(

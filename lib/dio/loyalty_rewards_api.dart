@@ -1,5 +1,5 @@
 import 'package:customer_app/core/const/config.dart';
-import 'package:customer_app/core/const/secure_storage.dart';
+import 'package:customer_app/dio/api_auth.dart';
 import 'package:customer_app/model/loyalty_policy_model.dart';
 import 'package:customer_app/model/loyalty_reward_model.dart';
 import 'package:dio/dio.dart';
@@ -8,17 +8,18 @@ class LoyaltyRewardsApi {
   final Dio _dio;
 
   LoyaltyRewardsApi([Dio? dio])
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+    : _dio = dio ?? ApiAuth.createDio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
   Future<List<LoyaltyRewardModel>> getAvailableLoyaltyRewards() async {
     try {
       final response = await _dio.get(
         ApiConfig.loyaltyRewardsAvailableEndpoint,
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return _readRewardsList(response.data);
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل مكافآت الولاء.');
     }
   }
@@ -27,11 +28,12 @@ class LoyaltyRewardsApi {
     try {
       final response = await _dio.get(
         '${ApiConfig.loyaltyRewardsEndpoint}/policy',
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return LoyaltyPolicyModel.fromJson(_readMap(response.data));
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر تحميل سياسة نقاط الولاء.');
     }
   }
@@ -41,23 +43,14 @@ class LoyaltyRewardsApi {
       final response = await _dio.post(
         '${ApiConfig.loyaltyRewardsEndpoint}/redeem',
         data: {'offerId': offerId},
-        options: await _authOptions(),
+        options: await ApiAuth.options(),
       );
 
       return LoyaltyRedemptionModel.fromJson(_readMap(response.data));
     } on DioException catch (e) {
+      await ApiAuth.throwIfUnauthorized(e);
       throw Exception(_readErrorMessage(e) ?? 'تعذر استبدال المكافأة.');
     }
-  }
-
-  Future<Options> _authOptions() async {
-    final token = await SecureStorage.read(SecureStorage.authTokenKey);
-
-    if (token == null || token.isEmpty) {
-      throw Exception('انتهت الجلسة، الرجاء تسجيل الدخول مرة أخرى.');
-    }
-
-    return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
   List<LoyaltyRewardModel> _readRewardsList(dynamic data) {
@@ -86,14 +79,6 @@ class LoyaltyRewardsApi {
   }
 
   String? _readErrorMessage(DioException error) {
-    final data = error.response?.data;
-
-    if (data is Map<String, dynamic>) {
-      return data['message']?.toString() ??
-          data['error']?.toString() ??
-          data['detail']?.toString();
-    }
-
-    return data?.toString();
+    return ApiAuth.readErrorMessage(error);
   }
 }

@@ -10,8 +10,14 @@ class RegisterSuccess extends RegisterState {
   final String message;
   final String email;
   final String? token;
+  final String? refreshToken;
 
-  RegisterSuccess({required this.message, required this.email, this.token});
+  RegisterSuccess({
+    required this.message,
+    required this.email,
+    this.token,
+    this.refreshToken,
+  });
 }
 
 class RegisterError extends RegisterState {

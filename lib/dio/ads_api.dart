@@ -7,7 +7,7 @@ class AdsApi {
   final Dio _dio;
 
   AdsApi([Dio? dio])
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+    : _dio = dio ?? ApiAuth.createDio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
   Future<List<AdModel>> getAds({bool activeOnly = true}) async {
     try {

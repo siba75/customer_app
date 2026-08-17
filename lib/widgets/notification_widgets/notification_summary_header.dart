@@ -1,6 +1,7 @@
 import 'package:customer_app/core/localization/app_localizations.dart';
 import 'package:customer_app/core/theem/app_typography.dart';
 import 'package:customer_app/core/theem/coler.dart';
+import 'package:customer_app/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 
 class NotificationSummaryHeader extends StatelessWidget {
@@ -35,19 +36,7 @@ class NotificationSummaryHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.notifications_active_outlined,
-              color: AppColors.white,
-              size: 28,
-            ),
-          ),
+          const AppLogo(size: 52, borderRadius: 14),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
