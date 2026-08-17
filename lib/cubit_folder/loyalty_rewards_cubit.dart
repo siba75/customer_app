@@ -14,38 +14,12 @@ class LoyaltyRewardsCubit extends Cubit<LoyaltyRewardsState> {
     emit(const LoyaltyRewardsLoading());
 
     try {
-      var policy = const LoyaltyPolicyModel.empty();
-      var rewards = const <LoyaltyRewardModel>[];
-      String? warningMessage;
-
-      try {
-        policy = await _api.getLoyaltyPolicy();
-      } catch (e) {
-        final message = e.toString().replaceFirst('Exception: ', '');
-        warningMessage = AppErrorMessages.friendly(
-          message,
-          fallback: 'تعذر تحميل سياسة نقاط الولاء.',
-        );
-      }
-
-      try {
-        rewards = await _api.getAvailableLoyaltyRewards();
-      } catch (e) {
-        final message = e.toString().replaceFirst('Exception: ', '');
-        final rewardsMessage = AppErrorMessages.friendly(
-          message,
-          fallback: 'تعذر تحميل مكافآت الولاء.',
-        );
-        warningMessage = warningMessage == null
-            ? rewardsMessage
-            : '$warningMessage\n$rewardsMessage';
-      }
+      final rewards = await _api.getAvailableLoyaltyRewards();
 
       emit(
         LoyaltyRewardsSuccess(
           rewards: rewards,
-          policy: policy,
-          warningMessage: warningMessage,
+          policy: const LoyaltyPolicyModel.empty(),
         ),
       );
     } catch (e) {

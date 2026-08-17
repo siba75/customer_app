@@ -282,6 +282,17 @@ class OrderDetailsSheet extends StatelessWidget {
                         color: context.appMutedText,
                       ),
                     ),
+                    if (item.barcode != null && item.barcode!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        context.trArgs('الباركود: {barcode}', {
+                          'barcode': item.barcode!,
+                        }),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: context.appMutedText,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -342,7 +353,7 @@ class OrderDetailsSheet extends StatelessWidget {
               hasDiscountName
                   ? order.appliedDiscountName!
                   : context.tr('مطبق على الطلب'),
-              helper: context.tr('قيمة الخصم غير مرجعة من الخادم لهذا الطلب.'),
+              helper: context.tr('تم تطبيق الخصم على الطلب.'),
             ),
           ],
           Divider(height: 24, color: context.appSoftBorder),

@@ -89,6 +89,7 @@ class OrderApi {
 
   Map<String, dynamic> _asMap(dynamic data) {
     if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
     throw Exception('صيغة بيانات الطلب غير صحيحة.');
   }
 
@@ -97,6 +98,7 @@ class OrderApi {
     final order = response['data'];
 
     if (order is Map<String, dynamic>) return order;
+    if (order is Map) return Map<String, dynamic>.from(order);
     return response;
   }
 
@@ -105,7 +107,8 @@ class OrderApi {
 
     if (orders is List) {
       return orders
-          .whereType<Map<String, dynamic>>()
+          .whereType<Map>()
+          .map((order) => Map<String, dynamic>.from(order))
           .map(Order.fromJson)
           .toList();
     }

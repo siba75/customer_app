@@ -9,7 +9,6 @@ import 'package:customer_app/cubit_folder/customer_profile_cubit.dart';
 import 'package:customer_app/cubit_folder/customer_profile_state.dart';
 import 'package:customer_app/cubit_folder/order_cubit.dart';
 import 'package:customer_app/model/cart_item_model.dart';
-import 'package:customer_app/pages/loyalty_rewards_screen.dart';
 import 'package:customer_app/pages/orders_screen.dart';
 import 'package:customer_app/widgets/product/authenticated_product_image.dart';
 import 'package:flutter/material.dart';
@@ -138,10 +137,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'discount': state.discount,
       'total': state.total.clamp(0, double.infinity),
     };
-  }
-
-  int _availableLoyaltyPoints() {
-    return _readProfileState()?.profile?.loyaltyPoints ?? 0;
   }
 
   CartItem? _firstInvalidStockItem(List<CartItem> items) {
@@ -288,8 +283,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 _buildAddressSection(),
                 _buildSectionHeader('منتجات الطلب'),
                 _buildOrderItemsPreview(cartState),
-                _buildSectionHeader('نقاط الولاء'),
-                _buildLoyaltySection(cartState),
                 _buildSectionHeader('طريقة الدفع'),
                 _buildPaymentSection(),
               ],
@@ -680,95 +673,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return context.tr('الخصم');
   }
 
-  Widget _buildLoyaltySection(CartState state) {
-    final availablePoints = _availableLoyaltyPoints();
-    final appliedDiscountName = state.discountName;
-    final hasAppliedDiscount =
-        appliedDiscountName != null && appliedDiscountName.isNotEmpty;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const LoyaltyRewardsScreen()),
-        );
-        if (!mounted) return;
-        context.read<CartCubit>().loadDiscounts();
-        await _reloadProfileSafely();
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.appSurface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: context.appSoftBorder),
-          boxShadow: context.appCardShadow(
-            alpha: 0.1,
-            blur: 24,
-            offset: const Offset(0, 10),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: AppColors.secondarySoft,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.stars, color: AppColors.secondary),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.trArgs('رصيدك: {points} نقطة', {
-                          'points': availablePoints,
-                        }),
-                        style: AppTypography.titleSmall.copyWith(
-                          color: context.appText,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.tr(
-                          'اضغطي هنا لاختيار مكافأة. بعد الاستبدال تتحول النقاط إلى خصم صالح للطلب.',
-                        ),
-                        style: AppTypography.bodySmall.copyWith(
-                          color: context.appMutedText,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: 18,
-                  color: context.appMutedText,
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _CheckoutLoyaltyGuide(
-              hasAppliedDiscount: hasAppliedDiscount,
-              discountName: appliedDiscountName,
-              discountAmount: state.discount,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildPaymentSection() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -895,85 +799,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _CheckoutLoyaltyGuide extends StatelessWidget {
-  final bool hasAppliedDiscount;
-  final String? discountName;
-  final double discountAmount;
-
-  const _CheckoutLoyaltyGuide({
-    required this.hasAppliedDiscount,
-    required this.discountName,
-    required this.discountAmount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = hasAppliedDiscount ? AppColors.success : AppColors.primary;
-    final title = hasAppliedDiscount
-        ? context.tr('خصم جاهز مطبق على طلبك')
-        : context.tr('بشو أستبدل النقاط؟');
-    final subtitle = hasAppliedDiscount
-        ? context.trArgs('{name} وفر عليك {amount}.', {
-            'name': discountName ?? context.tr('خصم متاح'),
-            'amount': context.money(discountAmount),
-          })
-        : context.tr(
-            'اختاري عرضاً من صفحة مكافآت الولاء. بعد الاستبدال يتحول العرض إلى خصم، ويطبقه النظام هنا عندما يكون أفضل خصم متاح للطلب.',
-          );
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.18)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              hasAppliedDiscount
-                  ? Icons.verified_outlined
-                  : Icons.card_giftcard_outlined,
-              color: color,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.titleSmall.copyWith(
-                    color: context.appText,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  subtitle,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: context.appMutedText,
-                    height: 1.45,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

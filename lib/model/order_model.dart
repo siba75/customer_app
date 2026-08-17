@@ -6,26 +6,32 @@ class OrderItem {
   final String name;
   final int quantity;
   final double price;
+  final double subtotal;
+  final String? barcode;
   final String? image;
 
   const OrderItem({
     required this.name,
     required this.quantity,
     required this.price,
+    required this.subtotal,
+    this.barcode,
     this.image,
   });
 
-  double get total => price * quantity;
+  double get total => subtotal > 0 ? subtotal : price * quantity;
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
-    final product = json['product'] is Map<String, dynamic>
-        ? json['product'] as Map<String, dynamic>
+    final product = json['product'] is Map
+        ? Map<String, dynamic>.from(json['product'] as Map)
         : <String, dynamic>{};
 
     return OrderItem(
       name: product['name']?.toString() ?? json['name']?.toString() ?? '',
       quantity: _toInt(json['quantity']),
       price: _toDouble(json['unitPrice'] ?? json['price']),
+      subtotal: _toDouble(json['subtotal']),
+      barcode: product['barcode']?.toString() ?? json['barcode']?.toString(),
       image: json['image']?.toString(),
     );
   }
@@ -114,8 +120,8 @@ class Order {
   factory Order.fromJson(Map<String, dynamic> json) {
     final createdAt = DateTime.tryParse(json['createdAt']?.toString() ?? '');
     final status = (json['status']?.toString() ?? '').toLowerCase();
-    final appliedDiscount = json['appliedDiscount'] is Map<String, dynamic>
-        ? json['appliedDiscount'] as Map<String, dynamic>
+    final appliedDiscount = json['appliedDiscount'] is Map
+        ? Map<String, dynamic>.from(json['appliedDiscount'] as Map)
         : <String, dynamic>{};
 
     final subtotal = _toDouble(json['subtotal']);
@@ -151,7 +157,8 @@ class Order {
       statusColor: _getStatusColor(status),
       items: json['items'] is List
           ? (json['items'] as List)
-                .whereType<Map<String, dynamic>>()
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
                 .map(OrderItem.fromJson)
                 .toList()
           : const [],

@@ -73,6 +73,7 @@ class CustomerApi {
 
   Map<String, dynamic> _asMap(dynamic data) {
     if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
     throw Exception('صيغة بيانات الحساب غير صحيحة.');
   }
 
@@ -82,7 +83,17 @@ class CustomerApi {
 
   bool _isUnauthorized(DioException error) {
     final statusCode = error.response?.statusCode;
-    return statusCode == 401 || statusCode == 403;
+    return statusCode == 401 || _hasInvalidTokenMessage(error);
+  }
+
+  bool _hasInvalidTokenMessage(DioException error) {
+    final message = _readErrorMessage(error)?.toLowerCase().trim();
+    if (message == null || message.isEmpty) return false;
+
+    return message.contains('invalid token') ||
+        message.contains('jwt expired') ||
+        message.contains('token expired') ||
+        message.contains('unauthorized');
   }
 
   bool _isConnectionIssue(DioException error) {

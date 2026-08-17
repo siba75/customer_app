@@ -125,9 +125,9 @@ class AuthApi {
   }
 
   Map<String, dynamic> _asResponseMap(dynamic data, String fallbackMessage) {
-    return data is Map<String, dynamic>
-        ? data
-        : {'message': data?.toString() ?? fallbackMessage};
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return {'message': data?.toString() ?? fallbackMessage};
   }
 
   static String? readToken(Map<String, dynamic> data) {
@@ -143,12 +143,13 @@ class AuthApi {
 
     for (final key in ['data', 'user']) {
       final nested = data[key];
-      if (nested is Map<String, dynamic>) {
+      if (nested is Map) {
+        final nestedMap = Map<String, dynamic>.from(nested);
         final nestedToken =
-            nested['accessToken'] ??
-            nested['token'] ??
-            nested['access_token'] ??
-            nested['jwt'];
+            nestedMap['accessToken'] ??
+            nestedMap['token'] ??
+            nestedMap['access_token'] ??
+            nestedMap['jwt'];
 
         if (nestedToken != null) {
           return nestedToken.toString();
@@ -169,11 +170,12 @@ class AuthApi {
 
     for (final key in ['data', 'user']) {
       final nested = data[key];
-      if (nested is Map<String, dynamic>) {
+      if (nested is Map) {
+        final nestedMap = Map<String, dynamic>.from(nested);
         final nestedToken =
-            nested['refreshToken'] ??
-            nested['refresh_token'] ??
-            nested['refresh'];
+            nestedMap['refreshToken'] ??
+            nestedMap['refresh_token'] ??
+            nestedMap['refresh'];
 
         if (nestedToken != null) {
           return nestedToken.toString();
@@ -191,6 +193,12 @@ class AuthApi {
       return data['message']?.toString() ??
           data['error']?.toString() ??
           data['detail']?.toString();
+    }
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      return map['message']?.toString() ??
+          map['error']?.toString() ??
+          map['detail']?.toString();
     }
 
     return data?.toString();

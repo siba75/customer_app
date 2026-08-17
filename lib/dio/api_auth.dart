@@ -110,6 +110,12 @@ class ApiAuth {
           data['error']?.toString() ??
           data['detail']?.toString();
     }
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      return map['message']?.toString() ??
+          map['error']?.toString() ??
+          map['detail']?.toString();
+    }
 
     return data?.toString();
   }
@@ -185,7 +191,7 @@ class ApiAuth {
 
   static bool _isUnauthorized(DioException error) {
     final statusCode = error.response?.statusCode;
-    return statusCode == 401 || statusCode == 403;
+    return statusCode == 401;
   }
 
   static bool _hasInvalidTokenMessage(DioException error) {
@@ -195,8 +201,7 @@ class ApiAuth {
     return message.contains('invalid token') ||
         message.contains('jwt expired') ||
         message.contains('token expired') ||
-        message.contains('unauthorized') ||
-        message.contains('forbidden');
+        message.contains('unauthorized');
   }
 
   static bool _isJwtExpiredOrAlmostExpired(String token) {
