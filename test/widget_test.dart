@@ -1,30 +1,86 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:customer_app/cubit_folder/otp_verification_cubit.dart';
+import 'package:customer_app/cubit_folder/otp_verification_state.dart';
+import 'package:customer_app/dio/auth_api.dart';
+import 'package:customer_app/model/verify_otp_model.dart';
+import 'package:customer_app/pages/register_screen.dart';
+import 'package:customer_app/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:customer_app/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('OTP verification does not require an auth token', () async {
+    final cubit = OtpVerificationCubit(_FakeAuthApi());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await cubit.verify(
+      model: VerifyOtpModel(email: 'user@example.com', code: '12345678'),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    expect(cubit.state, isA<OtpVerificationSuccess>());
+    await cubit.close();
+  });
+
+  testWidgets('Register screen rejects invalid email format', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: RegisterScreen(),
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'الاسم الكامل'),
+      'مستخدم تجريبي',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'البريد الإلكتروني'),
+      'invalid-email',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'رقم الهاتف'),
+      '0999999999',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'كلمة المرور'),
+      'password123',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'تأكيد كلمة المرور'),
+      'password123',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'رقم الهوية'),
+      '123456789',
+    );
+
+    final submitButton = find.widgetWithText(ElevatedButton, 'إنشاء الحساب');
+    await tester.ensureVisible(submitButton);
+    await tester.tap(submitButton);
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('الرجاء إدخال بريد إلكتروني صحيح'), findsOneWidget);
   });
+
+  testWidgets('App logo renders the configured asset', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: Center(child: AppLogo())),
+      ),
+    );
+
+    final image = tester.widget<Image>(find.byType(Image));
+    expect((image.image as AssetImage).assetName, kAppLogoAsset);
+  });
+}
+
+class _FakeAuthApi extends AuthApi {
+  @override
+  Future<Map<String, dynamic>> verifyOtp({
+    required VerifyOtpModel model,
+    String? token,
+  }) async {
+    expect(token, isNull);
+    return {'message': 'تم تأكيد الحساب بنجاح'};
+  }
 }

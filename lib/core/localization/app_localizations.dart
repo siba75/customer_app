@@ -139,6 +139,7 @@ class AppLocalizations {
     'أضيفي منتجاتك المفضلة وارجعي لإكمال الطلب بسهولة.':
         'Add products to your cart and come back to complete your order easily.',
     'المجموع قبل الخصم': 'Subtotal before discount',
+    'المجموع': 'Total',
     'الخصم': 'Discount',
     'الإجمالي للدفع': 'Total to pay',
     'المبلغ للدفع': 'Amount due',
@@ -199,14 +200,10 @@ class AppLocalizations {
     'العربية (Arabic)': 'English',
     'الوضع الداكن': 'Dark mode',
     'تبديل مظهر التطبيق': 'Change app appearance',
-    'المساعدة والدعم': 'Help and support',
     'الأسئلة الشائعة والتواصل معنا': 'FAQ and contact us',
-    'عن التطبيق': 'About app',
     'الإصدار 1.0.0': 'Version 1.0.0',
     'تسجيل الخروج': 'Sign out',
     'الخروج من حسابك': 'Leave your account',
-    '3 جديد': '3 new',
-    'جاري التطوير...': 'Coming soon...',
     'اختر اللغة': 'Choose language',
     'العربية': 'Arabic',
     'English': 'English',
@@ -263,6 +260,8 @@ class AppLocalizations {
     'خصم مطبق': 'Discount applied',
     'لا توجد طلبات': 'No orders',
     'لم تقم بإجراء أي طلبات بعد': 'You have not placed any orders yet',
+    'لم تقم بإجراء أي طلبات بعد. تصفح المنتجات وأضف أول طلب لك بسهولة.':
+        'You have not placed any orders yet. Browse products and place your first order easily.',
     'تسوق الآن': 'Shop now',
     'تحديث الإشعارات': 'Refresh notifications',
     'لا توجد إشعارات جديدة': 'No new notifications',
@@ -271,6 +270,12 @@ class AppLocalizations {
     'كل شيء مقروء ومرتب لديك.': 'Everything is read and tidy.',
     'الإشعارات التي تقرئينها ستظهر هنا.':
         'Notifications you read will appear here.',
+    'كل إشعارات الطلبات والعروض وتحديثات الحساب ستظهر هنا.':
+        'All order, offer, and account update notifications will appear here.',
+    '{count} جديد': '{count} new',
+    '99+ جديد': '99+ new',
+    'للمساعدة، راجعي الأسئلة الشائعة داخل التطبيق أو تواصلي مع فريق الدعم الخاص بالمتجر.':
+        'For help, review the in-app FAQs or contact the store support team.',
     'وصل {time}': 'Received {time}',
     'وصل {time} - {date}': 'Received {time} - {date}',
     'تراجع': 'Back',
@@ -397,18 +402,33 @@ class AppLocalizations {
         'No suitable discount is available for this value right now.',
     'تعذر حساب الخصم حالياً.': 'Could not calculate the discount right now.',
     'اختيار الخصم': 'Choose discount',
+    'خيارات الخصم': 'Discount options',
     'جاري حساب الخصم المناسب للسلة...':
         'Calculating the right discount for the cart...',
     'تم اختيار هذا الخصم يدوياً وسيتم إرساله مع الطلب.':
         'This discount was selected manually and will be sent with the order.',
+    'تم اختيار خصم يدوي. يمكنك الرجوع للأفضل تلقائياً بأي وقت.':
+        'A manual discount is selected. You can return to automatic best discount anytime.',
     'النظام اختار أفضل خصم مناسب للسلة تلقائياً.':
         'The system selected the best suitable discount automatically.',
+    'النظام اختار أعلى توفير مناسب للمنتجات الموجودة في السلة.':
+        'The system selected the highest saving suitable for the items in your cart.',
     'اختاري خصماً أو اتركي النظام يطبق الأفضل تلقائياً.':
         'Choose a discount or let the system apply the best one automatically.',
+    'يمكنك اختيار خصم يدوي أو ترك النظام يطبّق أعلى توفير تلقائياً.':
+        'You can choose a manual discount or let the system apply the highest saving automatically.',
     'اسم الخصم': 'Discount name',
     'وفرتِ': 'You saved',
     'اختاري خصم': 'Choose discount',
     'أفضل خصم': 'Best discount',
+    'أفضل خصم تلقائي': 'Automatic best discount',
+    'خصم مختار يدوياً': 'Manually selected discount',
+    '{count} خصومات': '{count} discounts',
+    'لا توجد خصومات': 'No discounts',
+    'لا يوجد خصم مناسب لمحتوى السلة الحالي.':
+        'No discount matches the current cart contents.',
+    'اتركي النظام يختار أعلى توفير مناسب للسلة.':
+        'Let the system choose the highest saving for the cart.',
     'اختاري الخصم المناسب': 'Choose the right discount',
     'تم تطبيق الخصم على السلة': 'Discount applied to cart',
     'تطبيق على السلة': 'Apply to cart',

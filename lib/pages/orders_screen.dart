@@ -67,7 +67,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(context.tr('تراجع'), style: TextStyle(color: AppColors.grey)),
+            child: Text(
+              context.tr('تراجع'),
+              style: TextStyle(color: AppColors.grey),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -112,26 +115,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.appBackground,
-      appBar: AppBar(
-        title: Text(context.tr('طلباتي')),
-        actions: [
-          BlocBuilder<OrderCubit, OrderState>(
-            builder: (context, state) {
-              return IconButton(
-                tooltip: context.tr('تحديث الطلبات'),
-                onPressed: state.isLoading ? null : _refreshOrders,
-                icon: state.isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh),
-              );
-            },
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   title: Text(context.tr('طلباتي')),
+      //   actions: [
+      //     BlocBuilder<OrderCubit, OrderState>(
+      //       builder: (context, state) {
+      //         return IconButton(
+      //           tooltip: context.tr('تحديث الطلبات'),
+      //           onPressed: state.isLoading ? null : _refreshOrders,
+      //           icon: state.isLoading
+      //               ? const SizedBox(
+      //                   width: 20,
+      //                   height: 20,
+      //                   child: CircularProgressIndicator(strokeWidth: 2),
+      //                 )
+      //               : const Icon(Icons.refresh),
+      //         );
+      //       },
+      //     ),
+      //   ],
+      // ),
       body: BlocBuilder<OrderCubit, OrderState>(
         builder: (context, state) {
           final filteredOrders = _filteredOrders(state.orders);

@@ -1,4 +1,3 @@
-import 'package:customer_app/core/const/secure_storage.dart';
 import 'package:customer_app/cubit_folder/otp_verification_state.dart';
 import 'package:customer_app/dio/auth_api.dart';
 import 'package:customer_app/model/verify_otp_model.dart';
@@ -13,16 +12,7 @@ class OtpVerificationCubit extends Cubit<OtpVerificationState> {
     try {
       emit(OtpVerificationLoading());
 
-      final authToken =
-          token ?? await SecureStorage.read(SecureStorage.authTokenKey);
-      if (authToken == null || authToken.isEmpty) {
-        emit(
-          OtpVerificationError('انتهت الجلسة، الرجاء إنشاء الحساب مرة أخرى'),
-        );
-        return;
-      }
-
-      final data = await _api.verifyOtp(model: model, token: authToken);
+      final data = await _api.verifyOtp(model: model, token: token);
 
       emit(
         OtpVerificationSuccess(

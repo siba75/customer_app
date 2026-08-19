@@ -70,13 +70,17 @@ class CartScreen extends StatelessWidget {
                               },
                             ),
                           ),
-                          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                          SliverToBoxAdapter(
+                            child: CartDiscountSelector(state: state),
+                          ),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 120),
+                          ),
                         ],
                       )
                     : const CartEmptyState(),
               ),
               if (state.hasItems) ...[
-                CartDiscountSelector(state: state),
                 CartSummaryCard(
                   subtotal: state.subtotal,
                   discount: state.discount,

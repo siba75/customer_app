@@ -73,13 +73,15 @@ class AuthApi {
 
   Future<Map<String, dynamic>> verifyOtp({
     required VerifyOtpModel model,
-    required String token,
+    String? token,
   }) async {
     try {
       final response = await _dio.post(
         ApiConfig.verifyEndpoint,
         data: model.toJson(),
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
+        options: token == null || token.trim().isEmpty
+            ? Options(extra: {'skip_auth': true})
+            : Options(headers: {'Authorization': 'Bearer ${token.trim()}'}),
       );
 
       return _asResponseMap(response.data, 'تم التحقق بنجاح');

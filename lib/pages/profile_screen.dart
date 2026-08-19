@@ -10,9 +10,12 @@ import 'package:customer_app/core/theem/theme_controller.dart';
 import 'package:customer_app/cubit_folder/cart_cubit.dart';
 import 'package:customer_app/cubit_folder/customer_profile_cubit.dart';
 import 'package:customer_app/cubit_folder/customer_profile_state.dart';
+import 'package:customer_app/cubit_folder/notifications_cubit.dart';
+import 'package:customer_app/cubit_folder/notifications_state.dart';
 import 'package:customer_app/cubit_folder/order_cubit.dart';
 import 'package:customer_app/cubit_folder/order_state.dart';
 import 'package:customer_app/dio/customer_api.dart';
+import 'package:customer_app/dio/notifications_api.dart';
 import 'package:customer_app/dio/order_api.dart';
 import 'package:customer_app/model/customer_profile_model.dart';
 import 'package:customer_app/pages/discounts_screen.dart';
@@ -42,6 +45,10 @@ class ProfileScreen extends StatelessWidget {
           create: (_) => CustomerProfileCubit(CustomerApi())..loadProfile(),
         ),
         BlocProvider(create: (_) => OrderCubit(OrderApi())..loadOrders()),
+        BlocProvider(
+          create: (_) =>
+              NotificationsCubit(NotificationsApi())..loadNotifications(),
+        ),
       ],
       child: const _ProfileView(),
     );
@@ -222,11 +229,16 @@ class _MenuSection extends StatelessWidget {
         Icons.notifications_none,
         'الإشعارات',
         'إعدادات التنبيهات',
-        () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-        ),
-        trailing: _badge(),
+        () {
+          final notificationsCubit = context.read<NotificationsCubit>();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => NotificationsScreen(cubit: notificationsCubit),
+            ),
+          );
+        },
+        trailing: _notificationBadge(),
       ),
       _item(
         Icons.language_outlined,
@@ -241,18 +253,7 @@ class _MenuSection extends StatelessWidget {
         () => ThemeController.setDarkMode(!ThemeController.isDarkMode),
         trailing: _themeSwitch(),
       ),
-      _item(
-        Icons.help_outline,
-        'المساعدة والدعم',
-        'الأسئلة الشائعة والتواصل معنا',
-        () => _snack(context),
-      ),
-      _item(
-        Icons.info_outline,
-        'عن التطبيق',
-        'الإصدار 1.0.0',
-        () => _showAppInfoDialog(context),
-      ),
+
       _item(
         Icons.logout,
         'تسجيل الخروج',
@@ -339,29 +340,45 @@ class _MenuSection extends StatelessWidget {
     );
   }
 
-  Widget _badge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Text(
-        '3 جديد',
-        style: TextStyle(
-          color: AppColors.error,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+  Widget _notificationBadge() {
+    return BlocBuilder<NotificationsCubit, NotificationsState>(
+      buildWhen: (previous, current) =>
+          previous.unreadCount != current.unreadCount ||
+          previous.isLoading != current.isLoading,
+      builder: (context, state) {
+        if (state.isLoading && state.notifications.isEmpty) {
+          return const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          );
+        }
+
+        final unreadCount = state.unreadCount;
+        if (unreadCount <= 0) return const SizedBox.shrink();
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            unreadCount > 99
+                ? context.tr('99+ جديد')
+                : context.trArgs('{count} جديد', {'count': unreadCount}),
+            style: const TextStyle(
+              color: AppColors.error,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      },
     );
   }
 
-  void _snack(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.tr('جاري التطوير...'))));
-  }
+
 
   void _showEditProfileSheet(
     BuildContext context,
@@ -418,15 +435,7 @@ class _MenuSection extends StatelessWidget {
     );
   }
 
-  void _showAppInfoDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(context.tr('عن التطبيق')),
-        content: Text('Smart Store\n${context.tr('الإصدار 1.0.0')}'),
-      ),
-    );
-  }
+
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(

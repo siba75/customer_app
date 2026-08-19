@@ -16,9 +16,10 @@ class CartDiscountSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasDiscount = state.discount > 0;
+    final hasAvailableDiscounts = state.activeDiscounts.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -62,7 +63,7 @@ class CartDiscountSelector extends StatelessWidget {
                       Text(
                         hasDiscount
                             ? context.tr('الخصم المطبق')
-                            : context.tr('اختيار الخصم'),
+                            : context.tr('خيارات الخصم'),
                         style: AppTypography.titleMedium.copyWith(
                           color: context.appText,
                           fontWeight: FontWeight.w900,
@@ -96,7 +97,9 @@ class CartDiscountSelector extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _DiscountMetric(
-                        label: context.tr('اسم الخصم'),
+                        label: state.hasManualDiscount
+                            ? context.tr('خصم مختار يدوياً')
+                            : context.tr('أفضل خصم تلقائي'),
                         value: state.discountName ?? context.tr('خصم متاح'),
                       ),
                     ),
@@ -109,17 +112,26 @@ class CartDiscountSelector extends StatelessWidget {
                   ],
                 ),
               ),
+            ] else if (!state.isCalculatingDiscount) ...[
+              const SizedBox(height: 12),
+              _NoDiscountMessage(hasAvailableDiscounts: hasAvailableDiscounts),
             ],
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: state.activeDiscounts.isEmpty
-                        ? null
-                        : () => _showDiscountSheet(context),
+                    onPressed: hasAvailableDiscounts
+                        ? () => _showDiscountSheet(context)
+                        : null,
                     icon: const Icon(Icons.tune_rounded, size: 18),
-                    label: Text(context.tr('اختاري خصم')),
+                    label: Text(
+                      hasAvailableDiscounts
+                          ? context.trArgs('{count} خصومات', {
+                              'count': state.activeDiscounts.length,
+                            })
+                          : context.tr('لا توجد خصومات'),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       side: const BorderSide(color: AppColors.primary),
@@ -137,7 +149,7 @@ class CartDiscountSelector extends StatelessWidget {
                         ? () => context.read<CartCubit>().useBestDiscount()
                         : null,
                     icon: const Icon(Icons.auto_awesome_outlined, size: 18),
-                    label: Text(context.tr('أفضل خصم')),
+                    label: Text(context.tr('أفضل خصم تلقائي')),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.white,
@@ -165,14 +177,20 @@ class CartDiscountSelector extends StatelessWidget {
     }
 
     if (state.hasManualDiscount) {
-      return context.tr('تم اختيار هذا الخصم يدوياً وسيتم إرساله مع الطلب.');
+      return context.tr(
+        'تم اختيار خصم يدوي. يمكنك الرجوع للأفضل تلقائياً بأي وقت.',
+      );
     }
 
     if (state.discount > 0) {
-      return context.tr('النظام اختار أفضل خصم مناسب للسلة تلقائياً.');
+      return context.tr(
+        'النظام اختار أعلى توفير مناسب للمنتجات الموجودة في السلة.',
+      );
     }
 
-    return context.tr('اختاري خصماً أو اتركي النظام يطبق الأفضل تلقائياً.');
+    return context.tr(
+      'يمكنك اختيار خصم يدوي أو ترك النظام يطبّق أعلى توفير تلقائياً.',
+    );
   }
 
   void _showDiscountSheet(BuildContext context) {
@@ -182,7 +200,52 @@ class CartDiscountSelector extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
         value: context.read<CartCubit>(),
-        child: _DiscountSheet(discounts: state.activeDiscounts),
+        child: _DiscountSheet(
+          discounts: state.activeDiscounts,
+          hasManualDiscount: state.hasManualDiscount,
+        ),
+      ),
+    );
+  }
+}
+
+class _NoDiscountMessage extends StatelessWidget {
+  final bool hasAvailableDiscounts;
+
+  const _NoDiscountMessage({required this.hasAvailableDiscounts});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.appBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.appSoftBorder),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            hasAvailableDiscounts
+                ? Icons.info_outline
+                : Icons.local_offer_outlined,
+            color: hasAvailableDiscounts ? AppColors.secondary : AppColors.grey,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              hasAvailableDiscounts
+                  ? context.tr('لا يوجد خصم مناسب لمحتوى السلة الحالي.')
+                  : context.tr('لا توجد خصومات متاحة حالياً.'),
+              style: AppTypography.bodySmall.copyWith(
+                color: context.appMutedText,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -221,8 +284,12 @@ class _DiscountMetric extends StatelessWidget {
 
 class _DiscountSheet extends StatelessWidget {
   final List<DiscountModel> discounts;
+  final bool hasManualDiscount;
 
-  const _DiscountSheet({required this.discounts});
+  const _DiscountSheet({
+    required this.discounts,
+    required this.hasManualDiscount,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -268,20 +335,75 @@ class _DiscountSheet extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: ListView.builder(
+                child: ListView(
                   controller: scrollController,
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 22),
-                  itemCount: discounts.length,
-                  itemBuilder: (context, index) {
-                    final discount = discounts[index];
-                    return _DiscountOption(discount: discount);
-                  },
+                  children: [
+                    _AutoDiscountOption(enabled: hasManualDiscount),
+                    const SizedBox(height: 10),
+                    ...discounts.map(
+                      (discount) => _DiscountOption(discount: discount),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _AutoDiscountOption extends StatelessWidget {
+  final bool enabled;
+
+  const _AutoDiscountOption({required this.enabled});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: enabled
+            ? AppColors.primary.withValues(alpha: 0.08)
+            : context.appBackground,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: enabled ? AppColors.primary : context.appSoftBorder,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        leading: CircleAvatar(
+          backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+          child: const Icon(
+            Icons.auto_awesome_outlined,
+            color: AppColors.primary,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          context.tr('أفضل خصم تلقائي'),
+          style: AppTypography.titleSmall.copyWith(
+            color: context.appText,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        subtitle: Text(
+          context.tr('اتركي النظام يختار أعلى توفير مناسب للسلة.'),
+          style: AppTypography.bodySmall.copyWith(color: context.appMutedText),
+        ),
+        trailing: enabled
+            ? const Icon(Icons.restart_alt_rounded, color: AppColors.primary)
+            : const Icon(Icons.check_circle, color: AppColors.success),
+        onTap: enabled
+            ? () async {
+                await context.read<CartCubit>().useBestDiscount();
+                if (!context.mounted) return;
+                Navigator.pop(context);
+              }
+            : null,
+      ),
     );
   }
 }
@@ -322,7 +444,7 @@ class _DiscountOption extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          '${_scope(context, discount)} • ${_value(context, discount)}',
+          '${_scope(context, discount)} - ${_value(context, discount)}',
           style: AppTypography.bodySmall.copyWith(color: context.appMutedText),
         ),
         trailing: selected

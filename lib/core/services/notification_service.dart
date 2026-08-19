@@ -273,24 +273,6 @@ class NotificationService {
     }
   }
 
-  static Future<void> _subscribeToTopics() async {
-    try {
-      const topics = ['all', 'ALL', 'customer', 'customers', 'CUSTOMER'];
-
-      for (final topic in topics) {
-        await _messaging.subscribeToTopic(topic);
-        if (kDebugMode) {
-          debugPrint('Subscribed to FCM topic: $topic');
-        }
-      }
-    } catch (error) {
-      if (kDebugMode) {
-        debugPrint('Failed to subscribe to FCM topics: $error');
-      }
-      // Topic subscription requires network access and Google Play Services.
-    }
-  }
-
   static Future<void> _sendTokenToBackend(String token) async {
     final authToken = await ApiAuth.accessToken();
     if (authToken == null || authToken.isEmpty) return;

@@ -1,6 +1,4 @@
-import 'package:customer_app/core/const/secure_storage.dart';
 import 'package:customer_app/core/localization/app_localizations.dart';
-import 'package:customer_app/core/services/notification_service.dart';
 import 'package:customer_app/widgets/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -113,14 +111,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    textDirection: TextDirection.ltr,
                     textAlign: TextAlign.right,
                     decoration: InputDecoration(
                       labelText: context.tr('البريد الإلكتروني'),
                       prefixIcon: const Icon(Icons.email_outlined),
                     ),
-                    validator: (v) => (v?.isEmpty ?? true)
-                        ? context.tr('الرجاء إدخال البريد')
-                        : null,
+                    validator: _validateEmail,
                   ),
                   const SizedBox(height: 16),
 
@@ -230,21 +227,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   BlocConsumer<RegisterCubit, RegisterState>(
                     listener: (context, state) async {
                       if (state is RegisterSuccess) {
-                        if (state.token != null) {
-                          await SecureStorage.write(
-                            SecureStorage.authTokenKey,
-                            state.token!,
-                          );
-                          if (state.refreshToken != null &&
-                              state.refreshToken!.trim().isNotEmpty) {
-                            await SecureStorage.write(
-                              SecureStorage.refreshTokenKey,
-                              state.refreshToken!,
-                            );
-                          }
-                          await NotificationService.prepareForSignedInUser();
-                        }
-
+                        if (!context.mounted) return;
                         showCustomSnackBar(
                           context,
                           state.message,
@@ -344,5 +327,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
     );
+  }
+
+  String? _validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+
+    if (email.isEmpty) {
+      return context.tr('الرجاء إدخال البريد الإلكتروني');
+    }
+
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailRegex.hasMatch(email)) {
+      return context.tr('الرجاء إدخال بريد إلكتروني صحيح');
+    }
+
+    return null;
   }
 }

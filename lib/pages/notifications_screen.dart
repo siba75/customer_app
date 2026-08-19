@@ -223,7 +223,7 @@ class _NotificationsViewState extends State<_NotificationsView> {
       case 'read':
         return 'الإشعارات التي تقرئينها ستظهر هنا.';
       default:
-        return '...';
+        return 'كل إشعارات الطلبات والعروض وتحديثات الحساب ستظهر هنا.';
     }
   }
 }

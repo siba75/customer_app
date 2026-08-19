@@ -615,7 +615,9 @@ class _ProductDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<int>(
-      value: products.any((product) => product.id == value) ? value : null,
+      initialValue: products.any((product) => product.id == value)
+          ? value
+          : null,
       items: products
           .map(
             (product) => DropdownMenuItem<int>(
@@ -650,7 +652,9 @@ class _CategoryDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<int>(
-      value: categories.any((category) => category.id == value) ? value : null,
+      initialValue: categories.any((category) => category.id == value)
+          ? value
+          : null,
       items: categories
           .map(
             (category) => DropdownMenuItem<int>(

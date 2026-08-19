@@ -35,18 +35,28 @@ class CartItemCard extends StatelessWidget {
           offset: const Offset(0, 12),
         ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [
-          _ProductThumb(item: item),
-          const SizedBox(width: 14),
-          Expanded(child: _ProductInfo(item: item)),
-          const SizedBox(width: 8),
-          _CardActions(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ProductThumb(item: item),
+              const SizedBox(width: 14),
+              Expanded(child: _ProductInfo(item: item)),
+              const SizedBox(width: 8),
+              _IconCircleButton(
+                icon: Icons.delete_outline,
+                color: AppColors.error,
+                backgroundColor: AppColors.error.withValues(alpha: 0.1),
+                onTap: onRemove,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _CartItemFooter(
             item: item,
             onIncrease: onIncrease,
             onDecrease: onDecrease,
-            onRemove: onRemove,
           ),
         ],
       ),
@@ -122,51 +132,65 @@ class _ProductInfo extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          context.trArgs('المجموع: {total}', {
-            'total': context.money(item.total),
-          }),
-          style: AppTypography.bodyMedium.copyWith(
-            color: context.appText,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
       ],
     );
   }
 }
 
-class _CardActions extends StatelessWidget {
+class _CartItemFooter extends StatelessWidget {
   final CartItem item;
   final VoidCallback onIncrease;
   final VoidCallback onDecrease;
-  final VoidCallback onRemove;
 
-  const _CardActions({
+  const _CartItemFooter({
     required this.item,
     required this.onIncrease,
     required this.onDecrease,
-    required this.onRemove,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _IconCircleButton(
-          icon: Icons.delete_outline,
-          color: AppColors.error,
-          backgroundColor: AppColors.error.withValues(alpha: 0.1),
-          onTap: onRemove,
-        ),
-        const SizedBox(height: 18),
-        _QuantityStepper(
-          quantity: item.quantity,
-          maxQuantity: item.maxQuantity,
-          onIncrease: onIncrease,
-          onDecrease: onDecrease,
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: context.appBackground,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: context.appSoftBorder),
+      ),
+      child: Row(
+        children: [
+          _QuantityStepper(
+            quantity: item.quantity,
+            maxQuantity: item.maxQuantity,
+            onIncrease: onIncrease,
+            onDecrease: onDecrease,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  context.tr('المجموع'),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: context.appMutedText,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  context.money(item.total),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -186,40 +210,33 @@ class _QuantityStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      decoration: BoxDecoration(
-        color: context.appBackground,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: context.appSoftBorder),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _IconCircleButton(
-            icon: Icons.add,
-            color: _canIncrease ? AppColors.primary : AppColors.grey,
-            onTap: _canIncrease ? onIncrease : null,
-            size: 30,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Text(
-              '$quantity',
-              style: AppTypography.titleSmall.copyWith(
-                color: context.appText,
-                fontWeight: FontWeight.w800,
-              ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _IconCircleButton(
+          icon: Icons.remove,
+          color: quantity > 1 ? AppColors.primary : AppColors.grey,
+          onTap: quantity > 1 ? onDecrease : null,
+          size: 34,
+        ),
+        Container(
+          width: 44,
+          alignment: Alignment.center,
+          child: Text(
+            '$quantity',
+            style: AppTypography.titleSmall.copyWith(
+              color: context.appText,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          _IconCircleButton(
-            icon: Icons.remove,
-            color: quantity > 1 ? AppColors.primary : AppColors.grey,
-            onTap: quantity > 1 ? onDecrease : null,
-            size: 30,
-          ),
-        ],
-      ),
+        ),
+        _IconCircleButton(
+          icon: Icons.add,
+          color: _canIncrease ? AppColors.primary : AppColors.grey,
+          onTap: _canIncrease ? onIncrease : null,
+          size: 34,
+        ),
+      ],
     );
   }
 
